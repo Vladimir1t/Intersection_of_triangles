@@ -3,45 +3,55 @@
 #include <cstdint>
 #include <unordered_map>
 
+namespace Geometry {
+
+    struct Vect {
+        double x = 0;
+        double y = 0;
+        double z = 0;
+
+        Vect operator-(const Vect& other) const {
+            return {x - other.x, y - other.y, z - other.z};
+        }
+
+        Vect operator+(const Vect& other) const {
+            return {x + other.x, y + other.y, z + other.z};
+        }
+
+        template <typename T>
+        Vect operator*(const T scalar) const {
+            return {x * scalar, y * scalar, z * scalar};
+        }
+        double count_dot(const Vect& v) const { // скалярное произведение 
+            return v.x * x + v.y * y + v.z * z;
+        }
+
+        Vect cross(const Vect& v) const {
+            return { 
+                y * v.z - z * v.y,
+                z * v.x - x * v.z,
+                x * v.y - y * v.x
+            };
+        }
+    };
+
+    struct Triangle {
+        Vect a = {0};
+        Vect b = {0};
+        Vect c = {0};
+    };
+
 class Triangle_intersection {
 
 private:
 
-    struct Point {
-        double x = 0;
-        double y = 0;
-        double z = 0;
-    };
-
-    struct Vector {
-        double x = 0;
-        double y = 0;
-        double z = 0;
-    };
-
-    struct Triangle {
-        Point    p1;
-        Point    p2;
-        Point    p3;
-    };
-    
-    std::vector<Triangle> triangle_array;  // ? 
+    std::vector<Triangle> triangle_array;  
 
     std::unordered_map<uint64_t, uint64_t> hash_t;
 
-    double count_dot_product(const Vector& v1, const Vector& v2) { // скалярное произведение 
+    Vect count_Vect_product(const Vect& v1, const Vect& v2) { // векторное произведение
 
-        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-    }
-
-    Vector div_vector(const Vector& v, double num) { // деление вектора на число
-
-        return {v.x / num, v.y / num, v.z / num};
-    }
-
-    Vector count_vector_product(const Vector& v1, const Vector& v2) { // векторное произведение
-
-        Vector v_new = {};
+        Vect v_new = {};
         v_new.x = v1.y * v2.z - v1.z * v2.y;
         v_new.y = v1.z * v2.x - v1.x * v2.z;
         v_new.z = v1.x * v2.y - v1.y * v2.x;
@@ -49,80 +59,106 @@ private:
         return v_new;
     }
 
-    bool intersect(Triangle tr1, Triangle tr2) {
+    /** @brief 
+     * @param ray_origin
+     * @param ray_dir
+     * @param tr
+     * @param out_intersection_point
+     * @return 
+     */
+    bool ray_intersects_triangle(const Vect& ray_origin, const Vect& ray_dir, const Triangle& tr, Vect& out_intersection_point) {
 
+        const double EPSILON = 0.0000001;
+        Vect vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
+        Vect edge1 = vertex2 - vertex1;
+        Vect edge2 = vertex3 - vertex1;
+
+        Vect H = ray_dir.cross(edge2);
+        double a = edge1.count_dot(H);
+
+        if (std::fabs(a) < EPSILON) 
+            return false;
+
+        double f = 1 / a;
+        Vect S = ray_origin - vertex1;
+        double u = f * (S.count_dot(H));
+
+        if (u < 0 || u > 1) 
+            return false;
+
+        Vect Q = S.cross(edge1);
+        double v = f * ray_dir.count_dot(Q);
+
+        if (v < 0 || u + v > 1)
+            return false;
+        
+        double t = f * edge2.count_dot(Q);
+
+        if (t > EPSILON) {
+            out_intersection_point = ray_origin + ray_dir * t;
+            return true;
+        }
+        else 
+            return false;
     }
+
+    bool point_in_triangle(const Vect& point, const Triangle& triangle) {
+
+        Vect v1 = triangle.b - triangle.a;
+        Vect v2 = triangle.c - triangle.a;
+        Vect v3 = point - triangle.a;
+
+        if ((v1.x * (v2.y * v3.z - v2.z * v3.y) - 
+             v1.y * (v2.x * v3.z - v2.z * v3.x) + 
+             v1.z * (v2.x * v3.z - v2.z * v3.x)) != 0)
+            return 0; // not complanar
+
+        double dot00 = v1.count_dot(v1);
+        double dot01 = v1.count_dot(v2);
+        double dot02 = v1.count_dot(v3);
+        double dot11 = v2.count_dot(v2);
+        double dot12 = v2.count_dot(v3);
+
+        double inv_denom = 1 / (dot00 * dot11 - dot01 * dot01);
+        double u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
+        double v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
+
+        return (u >= 0) && (v >= 0) && (u + v <= 1);
+    } 
 
 public: 
 
-    void create_triangle(double p1_x, double p1_y, double p1_z, 
-                         double p2_x, double p2_y, double p2_z,
-                         double p3_x, double p3_y, double p3_z) {
+    // Check if two triangles intersect by testing edge intersections
+    bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
+        Vect intersectionPoint;
 
-        triangle_array.push_back({{p1_x, p1_y, p1_z}, {p2_x, p2_y, p2_z}, {p3_x, p3_y, p3_z}});
-        
-    }
-
-    bool run_intersection() {
-        
-        bool result = false;
-        for (int i = 0; i < triangle_array.size(); ++i) {
-            for (int j = i + 1; j < triangle_array.size(); ++j) {
-                result = detect_intersection(triangle_array.at(i), triangle_array.at(j));
-            }
+        // Test edges of t1 against t2
+        if (ray_intersects_triangle(t1.a, t1.b - t1.a, t2, intersectionPoint) ||
+            ray_intersects_triangle(t1.b, t1.c - t1.b, t2, intersectionPoint) ||
+            ray_intersects_triangle(t1.c, t1.a - t1.c, t2, intersectionPoint)) {
+            std::cout << "[ 1 ]\n";
+            return true;
         }
 
+        // Test edges of t2 against t1
+        if (ray_intersects_triangle(t2.a, t2.b - t2.a, t1, intersectionPoint) ||
+            ray_intersects_triangle(t2.b, t2.c - t2.b, t1, intersectionPoint) ||
+            ray_intersects_triangle(t2.c, t2.a - t2.c, t1, intersectionPoint)) {
+            std::cout << "[ 2 ]\n";
+            return true;
+        }
+
+        // Check if any vertex of t1 is inside t2 or vice versa
+        if (point_in_triangle(t1.a, t2) || point_in_triangle(t1.b, t2) || point_in_triangle(t1.c, t2)) {
+            std::cout << "[ 3 ]\n";
+            return true;
+        }
+        if (point_in_triangle(t2.a, t1) || point_in_triangle(t2.b, t1) || point_in_triangle(t2.c, t1)) {
+            std::cout << "[ 4 ]\n";
+            return true;
+        }
+
+        return false;
     }
-
-    void make_plane(Triangle triangle) {
-        // plane equation: ax + by + cz + d = 0
-
-        double a = ((triangle.p2.y - triangle.p1.x) * (triangle.p3.z - triangle.p1.z) - (triangle.p2.z - triangle.p1.z) * (triangle.p3.y - triangle.p1.y));
-
-        double b = ((triangle.p2.z - triangle.p1.z) * (triangle.p3.x - triangle.p1.z) - (triangle.p2.x - triangle.p1.x) * (triangle.p3.z - triangle.p1.z));
-
-        double c = ((triangle.p2.x - triangle.p1.x) * (triangle.p3.y - triangle.p1.y) - (triangle.p3.x - triangle.p1.x) * (triangle.p2.z - triangle.p1.z));
-
-        double d = -((triangle.p2.y - triangle.p1.x) * (triangle.p3.z - triangle.p1.z) - (triangle.p2.z - triangle.p1.z) * (triangle.p3.y - triangle.p1.y)) * triangle.p1.x
-                   -((triangle.p2.z - triangle.p1.z) * (triangle.p3.x - triangle.p1.z) - (triangle.p2.x - triangle.p1.x) * (triangle.p3.z - triangle.p1.z)) * triangle.p1.y
-                   -((triangle.p2.x - triangle.p1.x) * (triangle.p3.y - triangle.p1.y) - (triangle.p3.x - triangle.p1.x) * (triangle.p2.z - triangle.p1.z)) * triangle.p1.z;
-    }
-
-    bool detect_intersection(const Triangle& tr1, const Triangle& tr2) {
-
-        Vector U  = {tr1.p2.x - tr1.p1.x, tr1.p2.y - tr1.p1.y, tr1.p2.z - tr1.p1.z};
-        Vector V  = {tr1.p3.x - tr1.p1.x, tr1.p3.y - tr1.p1.y, tr1.p3.z - tr1.p1.z};
-
-        Vector S  = {tr2.p2.x - tr2.p1.x, tr2.p2.y - tr2.p1.y, tr2.p2.z - tr2.p1.z};
-        Vector T  = {tr2.p3.x - tr2.p1.x, tr2.p3.y - tr2.p1.y, tr2.p3.z - tr2.p1.z};
-        Vector AP = {tr2.p1.x - tr1.p1.x, tr2.p1.y - tr1.p1.y, tr2.p1.z - tr1.p1.z};
-
-        //double d = () * ();
-        Vector vector_product_U_V = count_vector_product(U, V);
-
-        // d = [U, V] * [U, V]
-        double d = count_dot_product(vector_product_U_V, vector_product_U_V);
-        std::cout << "coeff d = " << d << '\n';
-        
-        // a = [S, [U, V]]  / d
-        Vector a = div_vector(count_vector_product(S, vector_product_U_V), d);
-        std::cout << "vect a: x = " << a.x << "y = " << a.y << "z = " << a.z << '\n';
-        // b = [T, [U, V]]  / d
-        Vector b = div_vector(count_vector_product(T, vector_product_U_V), d);
-        std::cout << "vect b: x = " << b.x << "y = " << b.y << "z = " << b.z << '\n';
-        // y = [AP, [U, V]] / d   
-        Vector y = div_vector(count_vector_product(AP, vector_product_U_V), d);
-        std::cout << "vect y: x = " << y.x << "y = " << y.y << "z = " << y.z << '\n';
-
-
-
-
-        // 1. паралелльны или пересекаются плоскости (a1 == a2, b1 == b2, c1 == c2)
-        // 2. если пересекаются, ищем прямую пересечения 
-        // 3. треугольники должны пересекать эту прямую (Нахождение пересечения плоскости треугольника с отрезком
-        //                                               Проверка: лежит ли точка пересечения на отрезке
-        //                                               Проверка: лежит ли точка пересечения внутри треугольника)
-        // 4. чередуются ли точки пересечения (если совпадают точки, то ок.)
-    }
-
 };
+}
