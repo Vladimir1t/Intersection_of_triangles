@@ -6,9 +6,13 @@
 namespace Geometry {
 
     struct Vect {
-        double x = 0;
-        double y = 0;
-        double z = 0;
+        double x;
+        double y;
+        double z;
+
+        Vect(double x, double y, double z) : x(x), y(y), z(z) {}  // Vect constructor
+
+        Vect() {}
 
         Vect operator-(const Vect& other) const {
             return {x - other.x, y - other.y, z - other.z};
@@ -36,11 +40,15 @@ namespace Geometry {
     };
 
     struct Triangle {
-        Vect a = {0};
-        Vect b = {0};
-        Vect c = {0};
+        Vect a;
+        Vect b;
+        Vect c;
+
+        Triangle(const Vect& a, const Vect& b, const Vect& c) : a(a), b(b), c(c) {}
     };
 
+/** @brief Trinagle_intersection - class with methods of algorithm detecting intersection
+ */  
 class Triangle_intersection {
 
 private:
@@ -49,15 +57,15 @@ private:
 
     std::unordered_map<uint64_t, uint64_t> hash_t;
 
-    Vect count_Vect_product(const Vect& v1, const Vect& v2) { // векторное произведение
+    // Vect count_Vect_product(const Vect& v1, const Vect& v2) { // векторное произведение
 
-        Vect v_new = {};
-        v_new.x = v1.y * v2.z - v1.z * v2.y;
-        v_new.y = v1.z * v2.x - v1.x * v2.z;
-        v_new.z = v1.x * v2.y - v1.y * v2.x;
+    //     Vect v_new = {};
+    //     v_new.x = v1.y * v2.z - v1.z * v2.y;
+    //     v_new.y = v1.z * v2.x - v1.x * v2.z;
+    //     v_new.z = v1.x * v2.y - v1.y * v2.x;
 
-        return v_new;
-    }
+    //     return v_new;
+    // }
 
     /** @brief 
      * @param ray_origin
@@ -127,6 +135,18 @@ private:
     } 
 
 public: 
+
+    void add_triangle(const Triangle& tr) {
+        triangle_array.push_back(tr);
+    }
+    
+    void intersect_all() {
+        for (int i = 0; i < triangle_array.size(); ++i)
+            for (int j = i + 1; j < triangle_array.size(); ++j) {
+                if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true)
+                    std::cout << "intersect " << i << " and " << j << std::endl; 
+            }
+    }
 
     // Check if two triangles intersect by testing edge intersections
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {

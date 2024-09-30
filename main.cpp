@@ -85,5 +85,20 @@ int main() {
 
     additionalTests();
 
+    uint64_t number_tr = 0;
+    std::cin >> number_tr;
+
+    // Geometry::Triangle tr = {0}; 
+    double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
+    for (int i = 0; i < number_tr; ++i) {
+        std::cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
+        Geometry::Vect v1(x1, y1, z1);
+        Geometry::Vect v2(x2, y2, z2);
+        Geometry::Vect v3(x3, y3, z3);
+        Geometry::Triangle tr(v1, v2, v3);
+        tr_int.add_triangle(tr);
+    }
+    tr_int.intersect_all();
+
     return 0;
 }
