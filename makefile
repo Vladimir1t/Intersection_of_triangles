@@ -17,11 +17,11 @@ COBJ = $(CSRC : %.c = %.o)
 all : main.o 
 	$(CXX) main.o -I./include -o $(TARGET)
 
-# test : tests.o
-# $(CC) tests.o -I./include -o test.x
+test : tests.o
+	$(CXX) tests.o -I./include -o test.x
 
-# tests.o : src/tests.cpp
-# $(CC) -O2 -I./include -c src/tests.cpp
+tests.o : src/tests.cpp
+	$(CXX) -std=c++20 -O2 -I./include -c src/tests.cpp
 
 main.o : main.cpp
 	$(CXX) -std=c++20 -O2 -I./include -c main.cpp
