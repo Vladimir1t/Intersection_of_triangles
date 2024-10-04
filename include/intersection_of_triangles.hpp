@@ -7,8 +7,6 @@
 
 namespace Geometry {
 
-        std::set<uint64_t> set_index; //
-
     struct Vect {
         double x;
         double y;
@@ -19,7 +17,7 @@ namespace Geometry {
             arr[0] = x;
             arr[1] = y;
             arr[2] = z;
-        }  // Vector constructor
+        }  
 
         Vect() {}
 
@@ -37,8 +35,8 @@ namespace Geometry {
         }
         template <typename T>
         Vect operator/(T scalar) const {
-        return Vect(x / scalar, y / scalar, z / scalar);
-    }
+            return Vect(x / scalar, y / scalar, z / scalar);
+        }
 
         double count_dot(const Vect& v) const { 
             return v.x * x + v.y * y + v.z * z;
@@ -77,10 +75,6 @@ class Triangle_intersection {
 private:
 
     const double epsilon_ = 0.0000000001;
-
-    //std::vector<Triangle> triangle_array_;  
-
-    //std::set<uint64_t> set_index_;
 
     /** @brief 
      *  @param ray_origin vector
@@ -178,58 +172,63 @@ private:
 
 public: 
 
-    std::vector<Triangle> triangle_array_; 
-    std::set<uint64_t> set_index_; //
+    std::vector<Triangle> triangle_array; 
+    inline static std::set<uint64_t>    set_index; 
 
     void add_triangle(Triangle& tr) {
-        triangle_array_.push_back(tr);
-        tr.index = triangle_array_.size();
+        triangle_array.push_back(tr);
+        tr.index = triangle_array.size();
     }
     
-    void intersect_all() { // оптимизировать
-
-         for (uint64_t i = 0; i < triangle_array_.size(); ++i)
-             for (uint64_t j = i + 1; j < triangle_array_.size(); ++j) {
-                 if (intersects_triangle(triangle_array_.at(i), triangle_array_.at(j)) == true) {
+    #ifdef NDEBUG
+    void intersect_all() { 
+         for (uint64_t i = 0; i < triangle_array.size(); ++i)
+             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
+                 if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
                      std::cout << "intersect " << i << " and " << j << std::endl; 
-                     set_index_.insert(i);
-                     set_index_.insert(j);
+                     set_index.insert(i);
+                     set_index.insert(j);
                  }
              }
-        for (uint64_t tr_num: set_index_)
+        for (uint64_t tr_num: set_index)
             std::cout << tr_num << ' '; 
         std::cout << std::endl;
     }
+    #endif
 
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
 
-        // Сначала проверяем, параллельны ли плоскости треугольников
         if (are_planes_parallel(t1, t2)) {
-            // Если плоскости параллельны, проверяем, лежат ли они в одной плоскости
             if (!are_triangles_coplanar(t1, t2)) {
-                return false; // Треугольники в разных плоскостях и не могут пересекаться
+                return false; 
             }
         }
         if (ray_intersects_triangle(t1.a, t1.b - t1.a, t2) ||
             ray_intersects_triangle(t1.b, t1.c - t1.b, t2) ||
             ray_intersects_triangle(t1.c, t1.a - t1.c, t2)) {
-            std::cout << "[ 1 ]\n";
-
+            #ifdef Ndebug
+                std::cout << "[ 1 ]\n";
+            #endif
             return true;
         }
         if (ray_intersects_triangle(t2.a, t2.b - t2.a, t1) ||
             ray_intersects_triangle(t2.b, t2.c - t2.b, t1) ||
             ray_intersects_triangle(t2.c, t2.a - t2.c, t1)) {
-            std::cout << "[ 2 ]\n";
-
+            #ifdef Ndebug
+                std::cout << "[ 2 ]\n";
+            #endif
             return true;
         }
         if (point_in_triangle(t1.a, t2) || point_in_triangle(t1.b, t2) || point_in_triangle(t1.c, t2)) {
-            std::cout << "[ 3 ]\n";
+            #ifdef Ndebug
+                std::cout << "[ 3 ]\n";
+            #endif
             return true;
         }
         if (point_in_triangle(t2.a, t1) || point_in_triangle(t2.b, t1) || point_in_triangle(t2.c, t1)) {
-            std::cout << "[ 4 ]\n";
+            #ifdef Ndebug
+                std::cout << "[ 4 ]\n";
+            #endif
             return true;
         }
 
@@ -263,19 +262,6 @@ namespace Optimisation {
             max_point.z = std::max(max_point.z, point.z);
         }
 
-        AABB(const Triangle& tri) {
-            min_point = Vect(
-                std::min({tri.a.x, tri.b.x, tri.c.x}),
-                std::min({tri.a.y, tri.b.y, tri.c.y}),
-                std::min({tri.a.z, tri.b.z, tri.c.z})
-            );
-            max_point = Vect(
-                std::max({tri.a.x, tri.b.x, tri.c.x}),
-                std::max({tri.a.y, tri.b.y, tri.c.y}),
-                std::max({tri.a.z, tri.b.z, tri.c.z})
-            );
-        }
-
         AABB merge(const AABB& a, const AABB& b) {
             Vect minPoint(
                 std::min(a.min_point.x, b.min_point.x),
@@ -292,27 +278,25 @@ namespace Optimisation {
 
         // Проверка пересечения двух AABB
         bool intersects(const AABB& other) const {
-            std::cout << "Checking intersection between AABBs:\n";
-            std::cout << "This AABB: min(" << min_point.x << ", " << min_point.y << ", " << min_point.z
-                << "), max(" << max_point.x << ", " << max_point.y << ", " << max_point.z << ")\n";
-            std::cout << "Other AABB: min(" << other.min_point.x << ", " << other.min_point.y << ", " << other.min_point.z
-                << "), max(" << other.max_point.x << ", " << other.max_point.y << ", " << other.max_point.z << ")\n";
+            #ifdef NDEBUG
+                std::cout << "Checking intersection between AABBs:\n";
+                std::cout << "This AABB: min(" << min_point.x << ", " << min_point.y << ", " << min_point.z
+                          << "), max(" << max_point.x << ", " << max_point.y << ", " << max_point.z << ")\n";
+                std::cout << "Other AABB: min(" << other.min_point.x << ", " << other.min_point.y << ", " << other.min_point.z
+                          << "), max(" << other.max_point.x << ", " << other.max_point.y << ", " << other.max_point.z << ")\n";
+            #endif
 
-            //for (int i = 0; i < 3; ++i) {
-                if (max_point.x < other.min_point.x || min_point.x > other.max_point.x) 
-                    return false;
-                if (max_point.y < other.min_point.y || min_point.y > other.max_point.y) 
-                    return false;
-                if (max_point.z < other.min_point.z || min_point.z > other.max_point.z) 
-                    return false;
-            //}
+            if (max_point.x < other.min_point.x || min_point.x > other.max_point.x) 
+                return false;
+            if (max_point.y < other.min_point.y || min_point.y > other.max_point.y) 
+                return false;
+            if (max_point.z < other.min_point.z || min_point.z > other.max_point.z) 
+                return false;
+    
             return true;
         }
     };
     
-
-
-    // Узел BVH
     struct BVH_node {
         AABB bounding_box;
         BVH_node* left  = nullptr;
@@ -327,50 +311,40 @@ namespace Optimisation {
     AABB create_bounding_box(const std::vector<Triangle>& triangles) {
         AABB box;
         for (const Triangle& tr : triangles) {
-                box.expand(tr.a);
-                box.expand(tr.b);
-                box.expand(tr.c);
+            box.expand(tr.a);
+            box.expand(tr.b);
+            box.expand(tr.c);
         }
         return box;
     }
-
-
-
 
     // Рекурсивное построение BVH
     BVH_node* build_BVH(std::vector<Triangle>& triangles, int depth = 0) {
 
         if (triangles.size() == 1) {
-           // Листовой узел
-        //    std::cout << triangles.at(0).a.x << ' ' << triangles.at(0).a.y << ' ' << triangles.at(0).a.z << '\n';
            BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
-           //BVH_node leaf_node.aabb = AABB(triangles[0]);
            leaf_node->triangles = triangles;
            return leaf_node;
         }
         // Создаём ограничивающий объём для всех треугольников
         AABB box = create_bounding_box(triangles);
 
-        // Выбираем ось для разбиения (цикл по трём осям)
         int axis = depth % 3;
 
         // Сортируем треугольники по средней координате на выбранной оси
         sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
-            float centroidA = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
-            float centroidB = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
-            return centroidA < centroidB;
+            float centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
+            float centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
+            return centroid_A < centroid_B;
         });
 
-        // Разбиваем треугольники на две подгруппы
         size_t mid = triangles.size() / 2;
-        std::vector<Triangle> leftTriangles(triangles.begin(), triangles.begin() + mid);
-        std::vector<Triangle> rightTriangles(triangles.begin() + mid, triangles.end());
+        std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + mid);
+        std::vector<Triangle> right_triangles(triangles.begin() + mid, triangles.end());
 
-        // Создаём узел и рекурсивно строим левую и правую ветви
         BVH_node* node = new BVH_node(box);
-        ///node->triangles 
-        node->left  = build_BVH(leftTriangles, depth + 1);
-        node->right = build_BVH(rightTriangles, depth + 1);
+        node->left  = build_BVH(left_triangles,  depth + 1);
+        node->right = build_BVH(right_triangles, depth + 1);
 
         node->bounding_box = box.merge(node->left->bounding_box, node->right->bounding_box);
 
@@ -387,13 +361,15 @@ namespace Optimisation {
 
         for (const auto& t1 : triangles1) {
             for (const auto& t2 : triangles2) {
-                //std::cout << "t1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
-                //std::cout << "t2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
+                // std::cout << "t1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
+                // std::cout << "t2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
                 if (tr_int.intersects_triangle(t1, t2)) {
-                    std::cout << "Intersection between triangle " << t1.index
-                              << " and triangle " << t2.index << std::endl;
-                    set_index.insert(t1.index);
-                    set_index.insert(t2.index);
+                    #ifdef NDEBUG
+                        std::cout << "Intersection between triangle " << t1.index
+                                  << " and triangle " << t2.index << std::endl;
+                    #endif
+                    tr_int.set_index.insert(t1.index);
+                    tr_int.set_index.insert(t2.index);
                 }
             }
         }
@@ -402,7 +378,9 @@ namespace Optimisation {
 
     // Если AABB не пересекаются, нет смысла проверять
     if (!node1->bounding_box.intersects(node2->bounding_box)) {
-        std::cout << "AABB do not intesect\n";
+        #ifdef NDEBUG
+            std::cout << "AABB do not intesect\n";
+        #endif
         return;
     }
 
@@ -422,7 +400,6 @@ namespace Optimisation {
         check_BVH_intersection(node1->right, node2);
     }
 
-
     // Проверка пересечения между поддеревьями
     if (node1->left && node2->right) {
         check_BVH_intersection(node1->left, node2->right);
@@ -437,7 +414,7 @@ namespace Optimisation {
         check_BVH_intersection(node1->right, node2->right);
     }
 }
-
-
+}
+}
 
 
