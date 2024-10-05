@@ -26,8 +26,7 @@ int main() {
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
 
     for (uint64_t tr_num: tr_int.set_index)
-        std::cout << tr_num << ' '; 
-    std::cout << std::endl;
+        std::cout << tr_num << std::endl; 
 
     delete bvh_root;
 

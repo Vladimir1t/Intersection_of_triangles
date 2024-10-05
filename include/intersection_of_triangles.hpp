@@ -180,7 +180,7 @@ public:
 
     void add_triangle(Triangle& tr) {
         triangle_array.push_back(tr);
-        triangle_array.back().index = triangle_array.size();
+        triangle_array.back().index = triangle_array.size() - 1;
         #ifdef NDEBUG
             std::cout << "index = " << triangle_array.back().index << '\n';
         #endif
