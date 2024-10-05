@@ -7,66 +7,71 @@
 
 namespace Geometry {
 
-    struct Vect {
-        double x;
-        double y;
-        double z;
-        double arr[3];
+struct Vect {
+    double x;
+    double y;
+    double z;
+    double arr[3];
 
-        Vect(double x, double y, double z) : x(x), y(y), z(z) {
-            arr[0] = x;
-            arr[1] = y;
-            arr[2] = z;
-        }  
+    Vect(double x, double y, double z) : x(x), y(y), z(z) {
+        arr[0] = x;
+        arr[1] = y;
+        arr[2] = z;
+    }  
 
-        Vect() {}
+    Vect() {
+    }
 
-        Vect operator-(const Vect& other) const {
-            return {x - other.x, y - other.y, z - other.z};
-        }
+    Vect operator-(const Vect& other) const {
+        return {x - other.x, y - other.y, z - other.z};
+    }
 
-        Vect operator+(const Vect& other) const {
-            return {x + other.x, y + other.y, z + other.z};
-        }
+    Vect operator+(const Vect& other) const {
+        return {x + other.x, y + other.y, z + other.z};
+    }
 
-        template <typename T>
-        Vect operator*(const T scalar) const {
-            return {x * scalar, y * scalar, z * scalar};
-        }
-        template <typename T>
-        Vect operator/(T scalar) const {
-            return Vect(x / scalar, y / scalar, z / scalar);
-        }
+    template <typename T>
+    Vect operator*(const T scalar) const {
+        return {x * scalar, y * scalar, z * scalar};
+    }
+    template <typename T>
+    Vect operator/(T scalar) const {
+        return Vect(x / scalar, y / scalar, z / scalar);
+    }
 
-        double count_dot(const Vect& v) const { 
-            return v.x * x + v.y * y + v.z * z;
-        }
+    double count_dot(const Vect& vect) const { 
+        return vect.x * x + vect.y * y + vect.z * z;
+    }
 
-        Vect normalize() const {
-            double length = std::sqrt(x * x + y * y + z * z);
+    Vect normalize() const {
+        double length = std::sqrt(x * x + y * y + z * z);
 
-            if (length == 0) 
-                return Vect(0, 0, 0);          
-            return Vect(x / length, y / length, z / length);
-        }
+        if (length == 0) 
+            return Vect(0, 0, 0);          
+            
+        return Vect(x / length, y / length, z / length);
+    }
 
-        Vect cross(const Vect& v) const {
-            return { 
-                y * v.z - z * v.y,
-                z * v.x - x * v.z,
-                x * v.y - y * v.x
-            };
-        }
-    };
+    Vect cross(const Vect& vect) const {
+        return { 
+            y * vect.z - z * vect.y,
+            z * vect.x - x * vect.z,
+            x * vect.y - y * vect.x
+        };
+    }
+};
 
-    struct Triangle {
-        Vect a;
-        Vect b;
-        Vect c;
-        uint64_t index;
+struct Triangle {
+    Vect a;
+    Vect b;
+    Vect c;
 
-        Triangle(const Vect& a, const Vect& b, const Vect& c) : a(a), b(b), c(c) {}
-    };
+    uint64_t index;
+
+    Triangle(const Vect& a, const Vect& b, const Vect& c) : a(a), b(b), c(c) {}
+
+    ~Triangle() {}
+};
 
 /** @brief Trinagle_intersection - class with methods of algorithm detecting intersection
  */  
@@ -74,7 +79,7 @@ class Triangle_intersection {
 
 private:
 
-    const double epsilon_ = 0.0000000001;
+    const double epsilon_ = 0.000000001;
 
     /** @brief 
      *  @param ray_origin vector
@@ -109,11 +114,9 @@ private:
         
         double t = f * edge2.count_dot(Q);
 
-
-        if (t > epsilon_ && t < 1 + epsilon_) {  // intersection_point = ray_origin + ray_dir * t 
-
+        if (t > epsilon_ && t < 1 + epsilon_)   // intersection_point = ray_origin + ray_dir * t 
             return true;
-        }
+
         else 
             return false;
     }
@@ -124,11 +127,11 @@ private:
         Vect v2 = triangle.c - triangle.a;
         Vect v3 = point - triangle.a;
 
-        double result = v1.x * (v2.y * v3.z - v2.z * v3.y) - 
-                        v1.y * (v2.x * v3.z - v2.z * v3.x) + 
-                        v1.z * (v2.x * v3.y - v2.y * v3.x);
+        double are_copmplanar = v1.x * (v2.y * v3.z - v2.z * v3.y) - 
+                                v1.y * (v2.x * v3.z - v2.z * v3.x) + 
+                                v1.z * (v2.x * v3.y - v2.y * v3.x);
 
-        if (std::fabs(result) > epsilon_)
+        if (std::fabs(are_copmplanar) > epsilon_)
             return false;           
 
         double dot00 = v1.count_dot(v1);
@@ -165,31 +168,34 @@ private:
 
         Vect norm = normal(tr1);
         double d1 = norm.count_dot(tr1.a); 
-        double d2 = norm.count_dot(tr2.a); // Проверяем, лежит ли точка второго треугольника в этой плоскости
+        double d2 = norm.count_dot(tr2.a); 
 
         return std::abs(d2 - d1) < epsilon_; 
     }
 
 public: 
 
-    std::vector<Triangle> triangle_array; 
-    inline static std::set<uint64_t>    set_index; 
+    std::vector<Triangle>            triangle_array; 
+    inline static std::set<uint64_t> set_index; 
 
     void add_triangle(Triangle& tr) {
         triangle_array.push_back(tr);
-        tr.index = triangle_array.size();
+        triangle_array.back().index = triangle_array.size();
+        #ifdef NDEBUG
+            std::cout << "index = " << triangle_array.back().index << '\n';
+        #endif
     }
     
     #ifdef NDEBUG
     void intersect_all() { 
-         for (uint64_t i = 0; i < triangle_array.size(); ++i)
-             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
-                 if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
-                     std::cout << "intersect " << i << " and " << j << std::endl; 
-                     set_index.insert(i);
-                     set_index.insert(j);
-                 }
-             }
+        for (uint64_t i = 0; i < triangle_array.size(); ++i)
+            for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
+                if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
+                    std::cout << "intersect " << i << " and " << j << std::endl; 
+                    set_index.insert(i);
+                    set_index.insert(j);
+                }
+            }
         for (uint64_t tr_num: set_index)
             std::cout << tr_num << ' '; 
         std::cout << std::endl;
@@ -236,9 +242,10 @@ public:
     }
 };
 
-namespace Optimisation {
+class Optimisation {
 
-    // Структура AABB (axis-aligned bounding box)
+public:
+    // AABB (axis-aligned bounding box)
     struct AABB {
 
         Vect min_point, max_point;
@@ -250,7 +257,6 @@ namespace Optimisation {
 
         AABB(const Vect& minP, const Vect& maxP) : min_point(minP), max_point(maxP) {}
 
-        // Обновление границ AABB на основе новой точки
         void expand(const Vect& point) {
 
             min_point.x = std::min(min_point.x, point.x);
@@ -262,7 +268,7 @@ namespace Optimisation {
             max_point.z = std::max(max_point.z, point.z);
         }
 
-        AABB merge(const AABB& a, const AABB& b) {
+        AABB merge(const AABB& a, const AABB& b) const {
             Vect minPoint(
                 std::min(a.min_point.x, b.min_point.x),
                 std::min(a.min_point.y, b.min_point.y),
@@ -276,7 +282,6 @@ namespace Optimisation {
             return AABB(minPoint, maxPoint);
         }
 
-        // Проверка пересечения двух AABB
         bool intersects(const AABB& other) const {
             #ifdef NDEBUG
                 std::cout << "Checking intersection between AABBs:\n";
@@ -296,9 +301,11 @@ namespace Optimisation {
             return true;
         }
     };
-    
+
+    //node of bounding volume hierarchy (BVH)
     struct BVH_node {
         AABB bounding_box;
+
         BVH_node* left  = nullptr;
         BVH_node* right = nullptr;
 
@@ -309,7 +316,8 @@ namespace Optimisation {
 
     // Функция для создания ограничивающего объёма (AABB) для набора треугольников
     AABB create_bounding_box(const std::vector<Triangle>& triangles) {
-        AABB box;
+        
+        AABB box = {};
         for (const Triangle& tr : triangles) {
             box.expand(tr.a);
             box.expand(tr.b);
@@ -318,33 +326,23 @@ namespace Optimisation {
         return box;
     }
 
-    // Рекурсивное построение BVH
-    BVH_node* build_BVH(std::vector<Triangle>& triangles, int depth = 0) {
+    BVH_node* build_BVH(std::vector<Triangle>& triangles) {
 
         if (triangles.size() == 1) {
-           BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
-           leaf_node->triangles = triangles;
-           return leaf_node;
+            BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
+            leaf_node->triangles = triangles;
+            return leaf_node;
         }
-        // Создаём ограничивающий объём для всех треугольников
         AABB box = create_bounding_box(triangles);
-
-        int axis = depth % 3;
-
-        // Сортируем треугольники по средней координате на выбранной оси
-        sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
-            float centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
-            float centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
-            return centroid_A < centroid_B;
-        });
 
         size_t mid = triangles.size() / 2;
         std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + mid);
         std::vector<Triangle> right_triangles(triangles.begin() + mid, triangles.end());
 
         BVH_node* node = new BVH_node(box);
-        node->left  = build_BVH(left_triangles,  depth + 1);
-        node->right = build_BVH(right_triangles, depth + 1);
+        
+        node->left  = build_BVH(left_triangles);
+        node->right = build_BVH(right_triangles);
 
         node->bounding_box = box.merge(node->left->bounding_box, node->right->bounding_box);
 
@@ -354,15 +352,16 @@ namespace Optimisation {
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
     Triangle_intersection tr_int;
 
-    // Если это листовые узлы, проверяем треугольники на пересечение
-    if (!node1->left && !node1->right && !node2->left && !node2->right) {
+    if (!node1->left && !node1->right && !node2->left && !node2->right) {  // intersetc triangles, if they are leafs
         const auto& triangles1 = node1->triangles;
         const auto& triangles2 = node2->triangles;
 
         for (const auto& t1 : triangles1) {
             for (const auto& t2 : triangles2) {
-                // std::cout << "t1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
-                // std::cout << "t2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
+                #ifdef NDEBUG
+                    std::cout << "tr1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
+                    std::cout << "tr2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
+                #endif
                 if (tr_int.intersects_triangle(t1, t2)) {
                     #ifdef NDEBUG
                         std::cout << "Intersection between triangle " << t1.index
@@ -376,31 +375,28 @@ namespace Optimisation {
         return;
     }
 
-    // Если AABB не пересекаются, нет смысла проверять
-    if (!node1->bounding_box.intersects(node2->bounding_box)) {
+    if (!node1->bounding_box.intersects(node2->bounding_box)) {  // AABB don,t intersect
         #ifdef NDEBUG
             std::cout << "AABB do not intesect\n";
         #endif
         return;
     }
 
-    // Если один или оба узла не являются листьями, рекурсивно проверяем их поддеревья
-    if (node1->left && node1->right) {
+    if (node1->left && node1->right) {           // node1 isn't a leaf
         check_BVH_intersection(node1->left, node1->right);
     }
-    if (node2->left && node2->right) {
+    if (node2->left && node2->right) {           // node2 isn't a leaf
         check_BVH_intersection(node2->left, node2->right);
     }
-    if (!node1->left || !node1->right) {
+    if (!node1->left || !node1->right) {         // node1 is a leaf
         check_BVH_intersection(node1, node2->left);
         check_BVH_intersection(node1, node2->right);
     }
-    if (!node2->left || !node2->right) {
+    if (!node2->left || !node2->right) {         // node2 is a leaf
         check_BVH_intersection(node1->left, node2);
         check_BVH_intersection(node1->right, node2);
     }
 
-    // Проверка пересечения между поддеревьями
     if (node1->left && node2->right) {
         check_BVH_intersection(node1->left, node2->right);
     }
@@ -414,7 +410,7 @@ namespace Optimisation {
         check_BVH_intersection(node1->right, node2->right);
     }
 }
-}
+};
 }
 
 

@@ -8,6 +8,7 @@
 int main() {
 
     Geometry::Triangle_intersection tr_int;
+    Geometry::Optimisation opt;
 
     uint64_t number_tr = 0;
     std::cin >> number_tr;
@@ -20,9 +21,9 @@ int main() {
         tr_int.add_triangle(tr);
     }
 
-    Geometry::Optimisation::BVH_node* bvh_root = Geometry::Optimisation::build_BVH(tr_int.triangle_array);
+    Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
 
-    check_BVH_intersection(bvh_root->left, bvh_root->right);
+    opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
 
     for (uint64_t tr_num: tr_int.set_index)
         std::cout << tr_num << ' '; 
