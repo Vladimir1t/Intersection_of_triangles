@@ -186,21 +186,18 @@ public:
         #endif
     }
     
-    //#ifdef NDEBUG
+    #ifdef NDEBUG
     void intersect_all() { 
         for (uint64_t i = 0; i < triangle_array.size(); ++i)
             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
                 if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
-                    //std::cout << "intersect " << triangle_array.at(i).index << " and " <<  triangle_array.at(j).index << std::endl; 
+                    std::cout << "intersect " << triangle_array.at(i).index << " and " <<  triangle_array.at(j).index << std::endl; 
                     set_index.insert(i);
                     set_index.insert(j);
                 }
             }
-        //for (uint64_t tr_num: set_index)
-        //    std::cout << tr_num << ' '; 
-        //std::cout << std::endl;
     }
-    //#endif
+    #endif
 
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
 
@@ -345,13 +342,20 @@ public:
             return centroid_A < centroid_B;
         });
 
+
         size_t mid = triangles.size() / 2;
         std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + mid);
         std::vector<Triangle> right_triangles(triangles.begin() + mid, triangles.end());
 
+        #ifdef NDEBUG
+            for (auto tr: left_triangles)
+                std::cout << "left ind " << tr.index << '\n';
+            for (auto tr: right_triangles)
+                std::cout << "right ind " << tr.index << '\n';
+        #endif
+
         BVH_node* node = new BVH_node(box);
-        //std::cout << "left ind " << left_triangles.at(0).index << '\n';
-        //std::cout << "right ind " << right_triangles.at(0).index << '\n';
+        
         node->left  = build_BVH(left_triangles,  depth + 1);
         node->right = build_BVH(right_triangles, depth + 1);
 
@@ -363,8 +367,7 @@ public:
 
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
     Triangle_intersection tr_int;
-    //std::cout << "[ it ]\n";
-
+    
     if (!node1->left && !node1->right && !node2->left && !node2->right) {  // intersetc triangles, if they are leafs
         const auto& triangles1 = node1->triangles;
         const auto& triangles2 = node2->triangles;
@@ -389,18 +392,17 @@ public:
     }
 
     if (!node1->bounding_box.intersects(node2->bounding_box)) {  // AABB don,t intersect
-       // #ifdef NDEBUG
-            //std::cout << "AABB do not intesect\n";
-
-            if ((node1->left && node1->right) ) {           // node1 isn't a leaf
-                //std::cout << "go here 1\n";
-                check_BVH_intersection(node1->left, node1->right);
-            }
-            if ((node2->left && node2->right) ) {           // node2 isn't a leaf
-                //std::cout << "go here 2\n";
-                check_BVH_intersection(node2->left, node2->right);
-            }
-        //#endif
+        #ifdef NDEBUG
+            std::cout << "AABB do not intesect\n";
+        #endif
+        if ((node1->left && node1->right) ) {           // node1 isn't a leaf
+            //std::cout << "go here 1\n";
+            check_BVH_intersection(node1->left, node1->right);
+        }
+        if ((node2->left && node2->right) ) {           // node2 isn't a leaf
+            //std::cout << "go here 2\n";
+            check_BVH_intersection(node2->left, node2->right);
+        }
         return;
     }
 
@@ -410,16 +412,6 @@ public:
     if (node2->left && node2->right) {           // node2 isn't a leaf
         check_BVH_intersection(node2->left, node2->right);
     }
-
-    
-    // if (!node1->left || !node1->right) {         // node1 is a leaf
-    //     check_BVH_intersection(node1, node2->left);
-    //     check_BVH_intersection(node1, node2->right);
-    // }
-    // if (!node2->left || !node2->right) {         // node2 is a leaf
-    //     check_BVH_intersection(node1->left, node2);
-    //     check_BVH_intersection(node1->right, node2);
-    // }
 
     if (node1->left && node2->right) {
         check_BVH_intersection(node1->left, node2->right);
