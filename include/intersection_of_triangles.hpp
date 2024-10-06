@@ -186,21 +186,21 @@ public:
         #endif
     }
     
-    #ifdef NDEBUG
+    //#ifdef NDEBUG
     void intersect_all() { 
         for (uint64_t i = 0; i < triangle_array.size(); ++i)
             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
                 if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
-                    std::cout << "intersect " << i << " and " << j << std::endl; 
+                    //std::cout << "intersect " << triangle_array.at(i).index << " and " <<  triangle_array.at(j).index << std::endl; 
                     set_index.insert(i);
                     set_index.insert(j);
                 }
             }
-        for (uint64_t tr_num: set_index)
-            std::cout << tr_num << ' '; 
-        std::cout << std::endl;
+        //for (uint64_t tr_num: set_index)
+        //    std::cout << tr_num << ' '; 
+        //std::cout << std::endl;
     }
-    #endif
+    //#endif
 
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
 
@@ -318,7 +318,7 @@ public:
     AABB create_bounding_box(const std::vector<Triangle>& triangles) {
         
         AABB box = {};
-        for (const Triangle& tr : triangles) {
+        for (auto tr: triangles) {
             box.expand(tr.a);
             box.expand(tr.b);
             box.expand(tr.c);
@@ -326,38 +326,51 @@ public:
         return box;
     }
 
-    BVH_node* build_BVH(std::vector<Triangle>& triangles) {
+    BVH_node* build_BVH(std::vector<Triangle>& triangles, int depth = 0) {
 
         if (triangles.size() == 1) {
             BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
             leaf_node->triangles = triangles;
             return leaf_node;
         }
+        // Создаём ограничивающий объём для всех треугольников
         AABB box = create_bounding_box(triangles);
+
+        int axis = depth % 3;
+
+        //Сортируем треугольники по средней координате на выбранной оси
+        sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
+            float centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
+            float centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
+            return centroid_A < centroid_B;
+        });
 
         size_t mid = triangles.size() / 2;
         std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + mid);
         std::vector<Triangle> right_triangles(triangles.begin() + mid, triangles.end());
 
         BVH_node* node = new BVH_node(box);
-        
-        node->left  = build_BVH(left_triangles);
-        node->right = build_BVH(right_triangles);
+        //std::cout << "left ind " << left_triangles.at(0).index << '\n';
+        //std::cout << "right ind " << right_triangles.at(0).index << '\n';
+        node->left  = build_BVH(left_triangles,  depth + 1);
+        node->right = build_BVH(right_triangles, depth + 1);
 
         node->bounding_box = box.merge(node->left->bounding_box, node->right->bounding_box);
 
         return node;
     }
 
+
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
     Triangle_intersection tr_int;
+    //std::cout << "[ it ]\n";
 
     if (!node1->left && !node1->right && !node2->left && !node2->right) {  // intersetc triangles, if they are leafs
         const auto& triangles1 = node1->triangles;
         const auto& triangles2 = node2->triangles;
 
-        for (const auto& t1 : triangles1) {
-            for (const auto& t2 : triangles2) {
+        for (auto t1 : triangles1) {
+            for (auto t2 : triangles2) {
                 #ifdef NDEBUG
                     std::cout << "tr1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
                     std::cout << "tr2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
@@ -376,9 +389,18 @@ public:
     }
 
     if (!node1->bounding_box.intersects(node2->bounding_box)) {  // AABB don,t intersect
-        #ifdef NDEBUG
-            std::cout << "AABB do not intesect\n";
-        #endif
+       // #ifdef NDEBUG
+            //std::cout << "AABB do not intesect\n";
+
+            if ((node1->left && node1->right) ) {           // node1 isn't a leaf
+                //std::cout << "go here 1\n";
+                check_BVH_intersection(node1->left, node1->right);
+            }
+            if ((node2->left && node2->right) ) {           // node2 isn't a leaf
+                //std::cout << "go here 2\n";
+                check_BVH_intersection(node2->left, node2->right);
+            }
+        //#endif
         return;
     }
 
@@ -388,14 +410,16 @@ public:
     if (node2->left && node2->right) {           // node2 isn't a leaf
         check_BVH_intersection(node2->left, node2->right);
     }
-    if (!node1->left || !node1->right) {         // node1 is a leaf
-        check_BVH_intersection(node1, node2->left);
-        check_BVH_intersection(node1, node2->right);
-    }
-    if (!node2->left || !node2->right) {         // node2 is a leaf
-        check_BVH_intersection(node1->left, node2);
-        check_BVH_intersection(node1->right, node2);
-    }
+
+    
+    // if (!node1->left || !node1->right) {         // node1 is a leaf
+    //     check_BVH_intersection(node1, node2->left);
+    //     check_BVH_intersection(node1, node2->right);
+    // }
+    // if (!node2->left || !node2->right) {         // node2 is a leaf
+    //     check_BVH_intersection(node1->left, node2);
+    //     check_BVH_intersection(node1->right, node2);
+    // }
 
     if (node1->left && node2->right) {
         check_BVH_intersection(node1->left, node2->right);
@@ -412,5 +436,6 @@ public:
 }
 };
 }
+
 
 
