@@ -329,18 +329,15 @@ public:
             leaf_node->triangles = triangles;
             return leaf_node;
         }
-        // Создаём ограничивающий объём для всех треугольников
         AABB box = create_bounding_box(triangles);
 
         int axis = depth % 3;
 
-        //Сортируем треугольники по средней координате на выбранной оси
         sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
             float centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
             float centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
             return centroid_A < centroid_B;
         });
-
 
         size_t mid = triangles.size() / 2;
         std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + mid);
@@ -410,7 +407,6 @@ public:
         check_BVH_intersection(node2->left, node2->right);
     }
 
-    
     if ((!node1->left || !node1->right) && (node2->left && node2->right)) {         // node1 is a leaf
         check_BVH_intersection(node1, node2->left);
         check_BVH_intersection(node1, node2->right);
