@@ -311,7 +311,6 @@ public:
         BVH_node(const AABB& box) : bounding_box(box) {}
     };
 
-    // Функция для создания ограничивающего объёма (AABB) для набора треугольников
     AABB create_bounding_box(const std::vector<Triangle>& triangles) {
         
         AABB box = {};
@@ -364,10 +363,9 @@ public:
         return node;
     }
 
-
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
     Triangle_intersection tr_int;
-    
+
     if (!node1->left && !node1->right && !node2->left && !node2->right) {  // intersetc triangles, if they are leafs
         const auto& triangles1 = node1->triangles;
         const auto& triangles2 = node2->triangles;
@@ -395,12 +393,11 @@ public:
         #ifdef NDEBUG
             std::cout << "AABB do not intesect\n";
         #endif
+
         if ((node1->left && node1->right) ) {           // node1 isn't a leaf
-            //std::cout << "go here 1\n";
             check_BVH_intersection(node1->left, node1->right);
         }
         if ((node2->left && node2->right) ) {           // node2 isn't a leaf
-            //std::cout << "go here 2\n";
             check_BVH_intersection(node2->left, node2->right);
         }
         return;
@@ -411,6 +408,16 @@ public:
     }
     if (node2->left && node2->right) {           // node2 isn't a leaf
         check_BVH_intersection(node2->left, node2->right);
+    }
+
+    
+    if ((!node1->left || !node1->right) && (node2->left && node2->right)) {         // node1 is a leaf
+        check_BVH_intersection(node1, node2->left);
+        check_BVH_intersection(node1, node2->right);
+    }
+    if ((!node2->left || !node2->right) && (node1->left && node1->right)) {         // node2 is a leaf
+        check_BVH_intersection(node1->left, node2);
+        check_BVH_intersection(node1->right, node2);
     }
 
     if (node1->left && node2->right) {

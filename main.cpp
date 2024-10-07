@@ -21,6 +21,9 @@ int main() {
         tr_int.add_triangle(tr);
     }
 
+    #ifdef NDEBUG
+        tr_int.intersect_all();
+    #endif
     Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
 
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
