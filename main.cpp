@@ -30,6 +30,8 @@ int main() {
 
     for (uint64_t tr_num: tr_int.set_index)
         std::cout << tr_num << std::endl; 
+    
+    std::cout << '[' << Geometry::counter << "]\n";
 
     delete bvh_root;
 
