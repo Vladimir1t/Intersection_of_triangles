@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include "intersection_of_triangles.hpp"
 
@@ -15,7 +16,9 @@ bool run_test(const Geometry::Triangle& t1, const Geometry::Triangle& t2, bool e
     Geometry::Triangle_intersection tr_int;
     bool result = tr_int.intersects_triangle(t1, t2);
     if (result == expected_result) {
-        //std::cout << test_name << " passed.\n";
+        #ifndef NDEBUG
+            std::cout << test_name << " passed.\n";
+        #endif 
         return true;
     } 
     else {
@@ -27,8 +30,10 @@ bool run_test(const Geometry::Triangle& t1, const Geometry::Triangle& t2, bool e
 void run_tests() {
 
     Geometry::Triangle_intersection tr_int;
+    Geometry::Optimisation          opt;
+
     uint64_t test_counter = 0;
-    uint64_t Test_num     = 16;
+    uint64_t Test_num     = 17;
 
     // Test 1: Triangles intersect
     Geometry::Triangle triangle1({1, 1, 1}, {4, 1, 1}, {2.5, 4, 1});
@@ -106,6 +111,30 @@ void run_tests() {
     Geometry::Triangle tr13({1, 0, 4}, {5, 2, 0}, {0, 5, 0});
     Geometry::Triangle tr14({1, 1, 0}, {2, 2, 0}, {0, 5, 0});
     test_counter += run_test(tr13, tr14, true, "Intersection Test 16");
+
+    std::ifstream in;
+    in.open("test.txt");
+    if (!in.is_open()) {
+        std::cerr << "file didn't open\n";
+        return;
+    }
+    uint64_t number_tr = 0;
+    in >> number_tr;
+    double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
+
+    for (int i = 0; i < number_tr; ++i) {
+        in >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
+        Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
+        tr_int.add_triangle(tr);
+    }
+    in.close();
+
+    Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
+    opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
+    delete bvh_root;
+
+    std::set<uint64_t> res_ref = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+    test_counter += (tr_int.set_index == res_ref);
 
     if (test_counter == Test_num)
         std::cout << "All tests passed!" << std::endl;

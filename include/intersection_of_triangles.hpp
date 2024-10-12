@@ -34,6 +34,7 @@ struct Vect {
     Vect operator*(const T scalar) const {
         return {x * scalar, y * scalar, z * scalar};
     }
+
     template <typename T>
     Vect operator/(T scalar) const {
         return Vect(x / scalar, y / scalar, z / scalar);
@@ -179,12 +180,12 @@ public:
     void add_triangle(Triangle& tr) {
         triangle_array.push_back(tr);
         triangle_array.back().index = triangle_array.size() - 1;
-        #ifdef NDEBUG
+        #ifndef NDEBUG
             std::cout << "index = " << triangle_array.back().index << '\n';
         #endif
     }
     
-    #ifdef NDEBUG
+    //#ifndef NDEBUG
     void intersect_all() { 
         for (uint64_t i = 0; i < triangle_array.size(); ++i)
             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
@@ -195,7 +196,7 @@ public:
                 }
             }
     }
-    #endif
+    //#endif
 
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
 
@@ -209,7 +210,7 @@ public:
         if (ray_intersects_triangle(t1.a, t1.b - t1.a, t2) ||
             ray_intersects_triangle(t1.b, t1.c - t1.b, t2) ||
             ray_intersects_triangle(t1.c, t1.a - t1.c, t2)) {
-            #ifdef Ndebug
+            #ifndef NDEBUG
                 std::cout << "[ 1 ]\n";
             #endif
             return true;
@@ -217,19 +218,19 @@ public:
         if (ray_intersects_triangle(t2.a, t2.b - t2.a, t1) ||
             ray_intersects_triangle(t2.b, t2.c - t2.b, t1) ||
             ray_intersects_triangle(t2.c, t2.a - t2.c, t1)) {
-            #ifdef Ndebug
+            #ifndef NDEBUG
                 std::cout << "[ 2 ]\n";
             #endif
             return true;
         }
         if (point_in_triangle(t1.a, t2) || point_in_triangle(t1.b, t2) || point_in_triangle(t1.c, t2)) {
-            #ifdef Ndebug
+            #ifndef NDEBUG
                 std::cout << "[ 3 ]\n";
             #endif
             return true;
         }
         if (point_in_triangle(t2.a, t1) || point_in_triangle(t2.b, t1) || point_in_triangle(t2.c, t1)) {
-            #ifdef Ndebug
+            #ifndef NDEBUG
                 std::cout << "[ 4 ]\n";
             #endif
             return true;
@@ -285,7 +286,7 @@ public:
         }
 
         bool intersects(const AABB& other) const {
-            #ifdef NDEBUG
+            #ifndef NDEBUG
                 std::cout << "Checking intersection between AABBs:\n";
                 std::cout << "This AABB: min(" << min_point.x << ", " << min_point.y << ", " << min_point.z
                           << "), max(" << max_point.x << ", " << max_point.y << ", " << max_point.z << ")\n";
@@ -336,10 +337,11 @@ public:
         }
         AABB box = create_bounding_box(triangles);
 
-        int axis = depth % 3;
+        int axis = 0;
 
-        double best_cost = std::numeric_limits<float>::infinity();
+        double best_cost  = std::numeric_limits<float>::infinity();
         size_t best_split = 0;
+        const size_t step = (triangles.size() - 5) / 2 > 5 ? 5 : 1;
 
         double parent_area = box.surface_area();
         
@@ -348,21 +350,19 @@ public:
             double centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
             return centroid_A < centroid_B;
         });
-        const size_t step = 5;
-
         for (size_t i = step; i < triangles.size(); i += step) {
             std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + i);
             std::vector<Triangle> right_triangles(triangles.begin() + i, triangles.end());
 
-            AABB left_box = create_bounding_box(left_triangles);
+            AABB left_box  = create_bounding_box(left_triangles);
             AABB right_box = create_bounding_box(right_triangles);
 
-            double left_area = left_box.surface_area();
+            double left_area  = left_box.surface_area();
             double right_area = right_box.surface_area();
 
             double sah_cost = 2.0f + (left_area / parent_area) * left_triangles.size() + 
-                                  (right_area / parent_area) * right_triangles.size() +
-                                  0.1f * abs((int)left_triangles.size() - (int)right_triangles.size());
+                                     (right_area / parent_area) * right_triangles.size() +
+                                     0.1f * abs((int)left_triangles.size() - (int)right_triangles.size());
 
             if (sah_cost < best_cost && !left_triangles.empty() && !right_triangles.empty()) {
                 best_cost = sah_cost;
@@ -375,10 +375,10 @@ public:
             return leaf_node;
         }
 
-        std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + best_split);
+        std::vector<Triangle> left_triangles (triangles.begin(), triangles.begin() + best_split);
         std::vector<Triangle> right_triangles(triangles.begin() + best_split, triangles.end());
 
-        #ifdef NDEBUG
+        #ifndef NDEBUG
             for (auto tr: left_triangles)
                 std::cout << "left ind " << tr.index << '\n';
             for (auto tr: right_triangles)
@@ -386,31 +386,29 @@ public:
         #endif
 
         BVH_node* node = new BVH_node(box);
+        node->triangles = triangles;
         
         node->left  = build_BVH(left_triangles,  depth + 1);
         node->right = build_BVH(right_triangles, depth + 1);
-
-        //node->bounding_box = box.merge(node->left->bounding_box, node->right->bounding_box);
 
         return node;
     }
 
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
-    
+
     Triangle_intersection tr_int;
+    if ((!node1->left && !node1->right))
 
     if ((!node1->left && !node1->right) || (!node2->left && !node2->right)) {  // intersetc triangles, if they are leafs
-        const auto& triangles1 = node1->triangles;
-        const auto& triangles2 = node2->triangles;
-
-        for (auto t1 : triangles1) {
-            for (auto t2 : triangles2) {
-                //#ifdef NDEBUG
+      
+        for (auto& t1 : node1->triangles) {
+            for (auto& t2 : node2->triangles) {
+                #ifndef NDEBUG
                     std::cout << "tr1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
                     std::cout << "tr2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
-                //#endif
+                #endif
                 if (tr_int.intersects_triangle(t1, t2)) {
-                    #ifdef NDEBUG
+                    #ifndef NDEBUG
                         std::cout << "Intersection between triangle " << t1.index
                                   << " and triangle " << t2.index << std::endl;
                     #endif
@@ -430,7 +428,7 @@ public:
     }
 
     if (!node1->bounding_box.intersects(node2->bounding_box)) {  // AABB don,t intersect
-        #ifdef NDEBUG
+        #ifndef NDEBUG
             std::cout << "AABB do not intesect\n";
         #endif
         return;

@@ -21,7 +21,7 @@ int main() {
         tr_int.add_triangle(tr);
     }
 
-    #ifdef NDEBUG
+    #ifndef NDEBUG
         tr_int.intersect_all();
     #endif
     Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
@@ -31,7 +31,9 @@ int main() {
     for (uint64_t tr_num: tr_int.set_index)
         std::cout << tr_num << std::endl; 
     
-    std::cout << '[' << Geometry::counter << "]\n";
+    #ifndef NDEBUG
+        std::cout << '[' << Geometry::counter << "]\n";
+    #endif
 
     delete bvh_root;
 

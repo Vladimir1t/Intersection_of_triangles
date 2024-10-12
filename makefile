@@ -21,10 +21,10 @@ test : tests.o
 	$(CXX) tests.o -I./include -o test.x
 
 tests.o : src/tests.cpp
-	$(CXX) -std=c++20 -O2 -I./include -c src/tests.cpp
+	$(CXX) -std=c++20 -O2 -D NDEBUG -I./include -c src/tests.cpp
 
 main.o : main.cpp
-	$(CXX) -std=c++20 -O2 -I./include -c main.cpp
+	$(CXX) -std=c++20 -O2 -D NDEBUG -I./include -c main.cpp
 
 .PHONY clear :
 	rm -rf *.o *.log *.x
