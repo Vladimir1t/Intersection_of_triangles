@@ -305,7 +305,7 @@ public:
         }
     };
 
-    //node of bounding volume hierarchy (BVH)
+    // node of bounding volume hierarchy (BVH)
     struct BVH_node {
         AABB bounding_box;
 

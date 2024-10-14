@@ -49,14 +49,17 @@ The core algorithm consists of several stages:
 1. **Compiling the main program:**
    To compile the program that checks for triangle intersections from input:
    ```bash
-   make all
+   -DCMAKE_BUILD_TYPE=Release -S . -B build
    ```
-   This will generate an executable file named `./intersection.x`.
+   ```bash
+   --build build
+   ```
+   This will generate an executable file named `build/intersection.x` and `build/test.x`.
 
 2. **Running the program:**
    Once compiled, you can run the program and input the number of triangles followed by the coordinates of their vertices.
    ```bash
-   ./intersection.x
+   build/intersection.x
    ```
    Example input:
    ```
@@ -66,13 +69,9 @@ The core algorithm consists of several stages:
    ```
 
 3. **Compiling and running the tests:**
-   To run the test suite, compile the test program:
+   run the tests:
    ```bash
-   make test
-   ```
-   Then run the tests:
-   ```bash
-   ./test.x
+   build/test.x
    ```
 
 ### Example Program
@@ -112,7 +111,8 @@ You can run the program and provide input via standard input. Here's an example 
 
 **Output:**
 ```
-1 2
+1 
+2
 ```
 
 ### Example Test
@@ -138,25 +138,6 @@ run_test(triangle1, triangle2, false, "Intersection Test 1");
 └── main.cpp                            # Main program
 ```
 
-## Makefile
-
-The `Makefile` automates the compilation and testing process.
-
-- **Build the main program:**
-  ```bash
-  make all
-  ```
-
-- **Build and run the tests:**
-  ```bash
-  make test
-  ```
-
-- **Clean up object files and binaries:**
-  ```bash
-  make clear
-  ```
-
 ## Tests
 
 The program includes a comprehensive test suite. Tests cover the following cases:
@@ -165,15 +146,14 @@ The program includes a comprehensive test suite. Tests cover the following cases
 - One triangle contained inside another.
 - Triangles sharing an edge or vertex.
 
-You can add more test cases by modifying `tests.cpp`.
+You can add more test cases by modifying `src/tests.cpp`.
 
 ### Example Test Output:
 ```
---- All tests passed ---
+ All tests passed 
 ```
 
 ## Оптимизация 
-
 
 Bounding Volume Hierarchy [BVH]:https://en.wikipedia.org/wiki/Bounding_volume_hierarchy — это иерархическая структура данных, которая используется для ускорения проверки пересечений между объектами в 3D пространстве, такими как треугольники. Основная идея заключается в том, что вместо того, чтобы проверять пересечения между всеми объектами напрямую, можно сгруппировать объекты в более крупные объемы (bounding volumes) и проверять пересечения между этими объемами. Если объёмы не пересекаются, то можно избежать проверки всех объектов, находящихся внутри них.
 

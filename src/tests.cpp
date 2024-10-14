@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 #include "intersection_of_triangles.hpp"
 
@@ -12,7 +13,7 @@ int main() {
 }
 
 bool run_test(const Geometry::Triangle& t1, const Geometry::Triangle& t2, bool expected_result, const std::string& test_name) {
-   
+
     Geometry::Triangle_intersection tr_int;
     bool result = tr_int.intersects_triangle(t1, t2);
     if (result == expected_result) {
@@ -27,10 +28,38 @@ bool run_test(const Geometry::Triangle& t1, const Geometry::Triangle& t2, bool e
     }
 }
 
-void run_tests() {
+bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name) {
 
     Geometry::Triangle_intersection tr_int;
     Geometry::Optimisation          opt;
+
+    std::ifstream in;
+    in.open(file_name);
+    if (!in.is_open()) {
+        std::cerr << "File didn't open\n";
+        std::exit(0);
+    }
+    uint64_t number_tr = 0;
+    in >> number_tr;
+    double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
+
+    for (int i = 0; i < number_tr; ++i) {
+        in >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
+        Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
+        tr_int.add_triangle(tr);
+    }
+    in.close();
+
+    Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
+    opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
+    delete bvh_root;
+
+    return tr_int.set_index == res_ref;
+}
+
+void run_tests() {
+
+    Geometry::Triangle_intersection tr_int;
 
     uint64_t test_counter = 0;
     uint64_t Test_num     = 17;
@@ -112,29 +141,11 @@ void run_tests() {
     Geometry::Triangle tr14({1, 1, 0}, {2, 2, 0}, {0, 5, 0});
     test_counter += run_test(tr13, tr14, true, "Intersection Test 16");
 
-    std::ifstream in;
-    in.open("test.txt");
-    if (!in.is_open()) {
-        std::cerr << "file didn't open\n";
-        return;
-    }
-    uint64_t number_tr = 0;
-    in >> number_tr;
-    double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
+    std::set<uint64_t> res_ref1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+    test_counter += run_big_test(res_ref1, "test.txt");
 
-    for (int i = 0; i < number_tr; ++i) {
-        in >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
-        Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
-        tr_int.add_triangle(tr);
-    }
-    in.close();
-
-    Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
-    opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
-    delete bvh_root;
-
-    std::set<uint64_t> res_ref = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
-    test_counter += (tr_int.set_index == res_ref);
+    // std::set<uint64_t> res_ref2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+    // test_counter += run_big_test(res_ref1, "test3.txt");
 
     if (test_counter == Test_num)
         std::cout << "All tests passed!" << std::endl;
