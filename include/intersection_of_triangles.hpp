@@ -181,22 +181,22 @@ public:
         triangle_array.push_back(tr);
         triangle_array.back().index = triangle_array.size() - 1;
         #ifndef NDEBUG
-            std::cout << "index = " << triangle_array.back().index << '\n';
+            std::cout << "Index = " << triangle_array.back().index << '\n';
         #endif
     }
     
-    //#ifndef NDEBUG
+    #ifndef NDEBUG
     void intersect_all() { 
         for (uint64_t i = 0; i < triangle_array.size(); ++i)
             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
                 if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
-                    std::cout << "intersect " << triangle_array.at(i).index << " and " <<  triangle_array.at(j).index << std::endl; 
+                    std::cout << "Intersect " << triangle_array.at(i).index << " and " <<  triangle_array.at(j).index << std::endl; 
                     set_index.insert(i);
                     set_index.insert(j);
                 }
             }
     }
-    //#endif
+    #endif
 
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
 
@@ -337,11 +337,11 @@ public:
         }
         AABB box = create_bounding_box(triangles);
 
-        int axis = 0;
+        int axis = 0;  // x
 
         double best_cost  = std::numeric_limits<float>::infinity();
         size_t best_split = 0;
-        const size_t step = (triangles.size() - 5) / 2 > 5 ? 5 : 1;
+        const size_t step = (static_cast<int>(triangles.size()) - 5) / 2 > 5 ? 5 : 1;
 
         double parent_area = box.surface_area();
         
@@ -362,7 +362,7 @@ public:
 
             double sah_cost = 2.0f + (left_area / parent_area) * left_triangles.size() + 
                                      (right_area / parent_area) * right_triangles.size() +
-                                     0.1f * abs((int)left_triangles.size() - (int)right_triangles.size());
+                                     0.1f * abs(static_cast<int>(left_triangles.size()) - static_cast<int>(right_triangles.size()));
 
             if (sah_cost < best_cost && !left_triangles.empty() && !right_triangles.empty()) {
                 best_cost = sah_cost;
