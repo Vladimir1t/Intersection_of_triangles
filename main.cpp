@@ -1,7 +1,6 @@
 #include <iostream>
-#include <array>
-#include <cmath>
-#include <cassert>
+#include <cstdint>
+#include <set>
 
 #include "intersection_of_triangles.hpp"
 
@@ -12,6 +11,8 @@ int main() {
 
     uint64_t number_tr = 0;
     std::cin >> number_tr;
+    if (number_tr <= 0)
+        return 0;
 
     double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
     for (int i = 0; i < number_tr; ++i) {

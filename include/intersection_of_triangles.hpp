@@ -4,6 +4,7 @@
 #include <set>
 #include <limits>
 #include <algorithm>
+#include <cmath>
 
 namespace Geometry {
 

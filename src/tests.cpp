@@ -1,6 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <set>
+#include <string>
+#include <functional>
+#include <cstdint>
 
 #include "intersection_of_triangles.hpp"
 

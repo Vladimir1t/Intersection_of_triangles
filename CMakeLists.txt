@@ -28,9 +28,12 @@ target_link_libraries(test.x test_lib)
 # target_compile_options(intersection.x PRIVATE ${CMAKE_CXX_FLAGS})
 target_compile_options(test.x PRIVATE ${CMAKE_CXX_FLAGS})
 
-# cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
-# cmake --build build
-# ./build/intesection.x
+# -DCMAKE_BUILD_TYPE=Release -S . -B build
+# cmake --build buildcmake
+# ./build/intersection.x
+#
+# cmake .. -DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=./../../../../include-what-you-use/build/bin/include-what-you-use
+#
 # индивидуальная работа с таргетами
 # allbraces, allperms - библиотеки
 # set(APPS allbraces; allperms)
