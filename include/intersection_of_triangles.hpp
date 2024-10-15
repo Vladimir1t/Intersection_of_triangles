@@ -81,8 +81,8 @@ private:
 
     const double epsilon_ = 0.000000001;
 
-    /** @brief 
-     *  @param ray_origin vector
+    /** @brief ray_intersects_triangle - detect the intersection of a ray(trinagle side) and another triangle 
+     *  @param ray_origin vector 
      *  @param ray_dir vector 
      *  @param tr  tringle 
      *  @return 1 - intersect | 0 - don't intersect 
@@ -178,6 +178,9 @@ public:
     std::vector<Triangle>            triangle_array; 
     inline static std::set<uint64_t> set_index; 
 
+    /** @brief add triangle - push a new triangle into vector  
+     *  @param tr new trinagle 
+     */
     void add_triangle(Triangle& tr) {
         triangle_array.push_back(tr);
         triangle_array.back().index = triangle_array.size() - 1;
@@ -199,8 +202,12 @@ public:
     }
     #endif
 
+    /** @brief intersects_triangle - detect intersection between two triangles 
+     *  @param t1 first triangle
+     *  @param t2 second triangle 
+     */
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
-
+        
         counter++;
 
         if (are_planes_parallel(t1, t2)) {
@@ -241,10 +248,13 @@ public:
     }
 };
 
+/** @brief Optimisation - a class with methods of building BVH tree with AABB
+ */
 class Optimisation {
 
 public:
-    // AABB (axis-aligned bounding box)
+    /** @brief AABB (axis-aligned bounding box)
+    */
     struct AABB {
 
         Vect min_point, max_point;
@@ -286,6 +296,9 @@ public:
             return 2.0f * (diff.x * diff.y + diff.x * diff.z + diff.y * diff.z);
         }
 
+        /** @brief intersects - detect the intesection between two AABB
+         *  @param other another AABB
+         */
         bool intersects(const AABB& other) const {
             #ifndef NDEBUG
                 std::cout << "Checking intersection between AABBs:\n";
@@ -306,7 +319,8 @@ public:
         }
     };
 
-    // node of bounding volume hierarchy (BVH)
+    /** @brief node of bounding volume hierarchy (BVH)
+     */
     struct BVH_node {
         AABB bounding_box;
 
@@ -318,6 +332,8 @@ public:
         BVH_node(const AABB& box) : bounding_box(box) {}
     };
 
+    /** @brief create_bounding_box - create AABB for the triangles 
+     */
     AABB create_bounding_box(const std::vector<Triangle>& triangles) {
         
         AABB box = {};
@@ -329,7 +345,10 @@ public:
         return box;
     }
 
-    BVH_node* build_BVH(std::vector<Triangle>& triangles, int depth = 0) {
+    /** @brief build_BVH - recursively build BVH tree
+     *  @param tringles 
+     */
+    BVH_node* build_BVH(std::vector<Triangle>& triangles) {
 
         if (triangles.size() == 1) {
             BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
@@ -338,14 +357,15 @@ public:
         }
         AABB box = create_bounding_box(triangles);
 
-        int axis = 0;  // x
 
         double best_cost  = std::numeric_limits<float>::infinity();
-        size_t best_split = 0;
-        const size_t step = (static_cast<int>(triangles.size()) - 5) / 2 > 5 ? 5 : 1;
+        size_t best_split     = 0;
+        const size_t big_step = 5;
+        const size_t step = ((static_cast<int>(triangles.size()) - big_step) / 2 > big_step) ? big_step : 1;
 
         double parent_area = box.surface_area();
         
+        int axis = 0;  // x
         std::sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
             double centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
             double centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
@@ -389,12 +409,16 @@ public:
         BVH_node* node = new BVH_node(box);
         node->triangles = triangles;
         
-        node->left  = build_BVH(left_triangles,  depth + 1);
-        node->right = build_BVH(right_triangles, depth + 1);
+        node->left  = build_BVH(left_triangles);
+        node->right = build_BVH(right_triangles);
 
         return node;
     }
 
+    /** @brief check_BVH_intersection - detect intersection between leafs or subtrees
+     *  @param node1 - right node of a subtree
+     *  @param node2 - left node of a subtree
+     */
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
 
     Triangle_intersection tr_int;
@@ -421,10 +445,10 @@ public:
         return;
     }
 
-    if (node1->left && node1->right) {           // node1 isn't a leaf
+    if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right);
     }
-    if (node2->left && node2->right) {           // node2 isn't a leaf
+    if (node2->left && node2->right) {         
         check_BVH_intersection(node2->left, node2->right);
     }
 
