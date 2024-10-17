@@ -252,7 +252,7 @@ public:
  */
 class Optimisation {
 
-public:
+private:
     /** @brief AABB (axis-aligned bounding box)
     */
     struct AABB {
@@ -319,6 +319,7 @@ public:
         }
     };
 
+public:
     /** @brief node of bounding volume hierarchy (BVH)
      */
     struct BVH_node {
@@ -332,6 +333,7 @@ public:
         BVH_node(const AABB& box) : bounding_box(box) {}
     };
 
+private:
     /** @brief create_bounding_box - create AABB for the triangles 
      */
     AABB create_bounding_box(const std::vector<Triangle>& triangles) {
@@ -393,6 +395,7 @@ public:
         return best_split;
     }
 
+public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param tringles 
      */
