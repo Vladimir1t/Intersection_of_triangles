@@ -358,19 +358,16 @@ public:
         }
         AABB box = create_bounding_box(triangles);
 
-
         double best_cost  = std::numeric_limits<float>::infinity();
-        size_t best_split  = 0;
-        size_t step = 0;
-        if (triangles.size() > 140) { 
+        size_t best_split = 0;
+        size_t step       = 0;
+
+        if (triangles.size() > 140) 
             step = 70;
-        }
-        else if (triangles.size() > 20) { 
+        else if (triangles.size() > 20) 
             step = 10;
-        }
-        else if (triangles.size() > 4) {
+        else if (triangles.size() > 4) 
             step = 2;
-        }
         else 
             step = 1;
 
