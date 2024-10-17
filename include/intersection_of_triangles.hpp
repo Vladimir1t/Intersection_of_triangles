@@ -264,7 +264,7 @@ public:
             max_point = Vect(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
         }
 
-        AABB(const Vect& minP, const Vect& maxP) : min_point(minP), max_point(maxP) {}
+        AABB(const Vect& min_point, const Vect& max_point) : min_point(min_point), max_point(max_point) {}
 
         void expand(const Vect& point) {
 
@@ -278,17 +278,17 @@ public:
         }
 
         AABB merge(const AABB& a, const AABB& b) const {
-            Vect minPoint(
+            Vect min_point(
                 std::min(a.min_point.x, b.min_point.x),
                 std::min(a.min_point.y, b.min_point.y),
                 std::min(a.min_point.z, b.min_point.z)
             );
-            Vect maxPoint(
+            Vect max_point(
                 std::max(a.max_point.x, b.max_point.x),
                 std::max(a.max_point.y, b.max_point.y),
                 std::max(a.max_point.z, b.max_point.z)
             );
-            return AABB(minPoint, maxPoint);
+            return AABB(min_point, max_point);
         }
 
         double surface_area() const {
@@ -346,17 +346,7 @@ public:
         return box;
     }
 
-    /** @brief build_BVH - recursively build BVH tree
-     *  @param tringles 
-     */
-    BVH_node* build_BVH(std::vector<Triangle>& triangles) {
-
-        if (triangles.size() == 1) {
-            BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
-            leaf_node->triangles = triangles;
-            return leaf_node;
-        }
-        AABB box = create_bounding_box(triangles);
+    size_t find_best_split(std::vector<Triangle>& triangles, const Geometry::Optimisation::AABB& box) {
 
         double best_cost  = std::numeric_limits<float>::infinity();
         size_t best_split = 0;
@@ -379,7 +369,8 @@ public:
             double centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
             return centroid_A < centroid_B;
         });
-        for (size_t i = step; i < triangles.size(); i += step) { //?
+
+        for (size_t i = step; i < triangles.size(); i += step) { 
             std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + i);
             std::vector<Triangle> right_triangles(triangles.begin() + i, triangles.end());
 
@@ -398,6 +389,24 @@ public:
                 best_split = i;
             }
         }
+
+        return best_split;
+    }
+
+    /** @brief build_BVH - recursively build BVH tree
+     *  @param tringles 
+     */
+    BVH_node* build_BVH(std::vector<Triangle>& triangles) {
+
+        if (triangles.size() == 1) {
+            BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
+            leaf_node->triangles = triangles;
+            return leaf_node;
+        }
+        AABB box = create_bounding_box(triangles);
+
+        size_t best_split = find_best_split(triangles, box);
+
         if (best_split == 0 || best_split == triangles.size()) {
             BVH_node* leaf_node = new BVH_node(box);
             leaf_node->triangles = triangles;
@@ -430,7 +439,6 @@ public:
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
 
     Triangle_intersection tr_int;
-    //if ((!node1->left && !node1->right))
 
     if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right);
@@ -447,8 +455,6 @@ public:
     }
 
     if ((!node1->left && !node1->right) || (!node2->left && !node2->right)) {  // intersetc triangles, if one of them is a leaf
-
-        //std::cout << "it\n";
       
         for (auto& t1 : node1->triangles) {
             for (auto& t2 : node2->triangles) {
@@ -468,7 +474,6 @@ public:
         }
         return;
     }
-
 
     if (node1->left && node2->right) {
         check_BVH_intersection(node1->left, node2->right);
