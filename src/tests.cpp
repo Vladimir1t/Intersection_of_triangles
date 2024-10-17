@@ -58,15 +58,23 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
     delete bvh_root;
 
-    return tr_int.set_index == res_ref;
+    bool res = (tr_int.set_index == res_ref);
+
+    tr_int.set_index.clear();
+    if (res != true) {
+        std::cout << "Test faild\n";
+        return false;
+    }
+    else 
+        return true;
 }
 
 void run_tests() {
 
-    Geometry::Triangle_intersection tr_int;
+    //Geometry::Triangle_intersection tr_int;
 
     uint64_t test_counter = 0;
-    uint64_t Test_num     = 17;
+    uint64_t Test_num     = 18;
 
     // Test 1: Triangles intersect
     Geometry::Triangle triangle1({1, 1, 1}, {4, 1, 1}, {2.5, 4, 1});
@@ -148,10 +156,12 @@ void run_tests() {
     std::set<uint64_t> res_ref1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
     test_counter += run_big_test(res_ref1, "test.txt");
 
-    // std::set<uint64_t> res_ref2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
-    // test_counter += run_big_test(res_ref1, "test3.txt");
+    std::set<uint64_t> res_ref2 = {5, 6, 12, 16, 18, 19, 23, 24, 28, 32, 33, 38, 39, 40, 41, 47, 49, 53, 
+                                   56, 59, 61, 62, 67, 71, 74, 77, 86, 87, 93, 96, 98};
+    test_counter += run_big_test(res_ref2, "test3.txt");
 
     if (test_counter == Test_num)
         std::cout << "All tests passed!" << std::endl;
 }
+
 

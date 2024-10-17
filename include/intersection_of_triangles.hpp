@@ -208,7 +208,7 @@ public:
      */
     bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
         
-        counter++;
+        // counter++;
 
         if (are_planes_parallel(t1, t2)) {
             if (!are_triangles_coplanar(t1, t2)) {
@@ -338,6 +338,7 @@ public:
         
         AABB box = {};
         for (auto tr: triangles) {
+             counter++;
             box.expand(tr.a);
             box.expand(tr.b);
             box.expand(tr.c);
@@ -359,19 +360,29 @@ public:
 
 
         double best_cost  = std::numeric_limits<float>::infinity();
-        size_t best_split     = 0;
-        const size_t big_step = 5;
-        const size_t step = ((static_cast<int>(triangles.size()) - big_step) / 2 > big_step) ? big_step : 1;
+        size_t best_split  = 0;
+        size_t step = 0;
+        if (triangles.size() > 140) { 
+            step = 70;
+        }
+        else if (triangles.size() > 20) { 
+            step = 10;
+        }
+        else if (triangles.size() > 4) {
+            step = 2;
+        }
+        else 
+            step = 1;
 
         double parent_area = box.surface_area();
         
-        int axis = 0;  // x
+        int axis = 0;  
         std::sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
             double centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
             double centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
             return centroid_A < centroid_B;
         });
-        for (size_t i = step; i < triangles.size(); i += step) {
+        for (size_t i = step; i < triangles.size(); i += step) { //?
             std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + i);
             std::vector<Triangle> right_triangles(triangles.begin() + i, triangles.end());
 
@@ -395,7 +406,7 @@ public:
             leaf_node->triangles = triangles;
             return leaf_node;
         }
-
+        
         std::vector<Triangle> left_triangles (triangles.begin(), triangles.begin() + best_split);
         std::vector<Triangle> right_triangles(triangles.begin() + best_split, triangles.end());
 
@@ -422,28 +433,7 @@ public:
     void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
 
     Triangle_intersection tr_int;
-    if ((!node1->left && !node1->right))
-
-    if ((!node1->left && !node1->right) || (!node2->left && !node2->right)) {  // intersetc triangles, if they are leafs
-      
-        for (auto& t1 : node1->triangles) {
-            for (auto& t2 : node2->triangles) {
-                #ifndef NDEBUG
-                    std::cout << "tr1: " << t1.a.x << ' ' << t1.a.y << ' ' << t1.a.z << '\n';
-                    std::cout << "tr2: " << t2.a.x << ' ' << t2.a.y << ' ' << t2.a.z << '\n';
-                #endif
-                if (tr_int.intersects_triangle(t1, t2)) {
-                    #ifndef NDEBUG
-                        std::cout << "Intersection between triangle " << t1.index
-                                  << " and triangle " << t2.index << std::endl;
-                    #endif
-                    tr_int.set_index.insert(t1.index);
-                    tr_int.set_index.insert(t2.index);
-                }
-            }
-        }
-        return;
-    }
+    //if ((!node1->left && !node1->right))
 
     if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right);
@@ -458,6 +448,30 @@ public:
         #endif
         return;
     }
+
+    if ((!node1->left && !node1->right) || (!node2->left && !node2->right)) {  // intersetc triangles, if one of them is a leaf
+
+        //std::cout << "it\n";
+      
+        for (auto& t1 : node1->triangles) {
+            for (auto& t2 : node2->triangles) {
+                #ifndef NDEBUG
+                    std::cout << "tr1: " << t1.index << '\n';
+                    std::cout << "tr2: " << t2.index << '\n';
+                #endif
+                if (tr_int.intersects_triangle(t1, t2)) {
+                    #ifndef NDEBUG
+                        std::cout << "Intersection between triangle " << t1.index
+                                  << " and triangle " << t2.index << std::endl;
+                    #endif
+                    tr_int.set_index.insert(t1.index);
+                    tr_int.set_index.insert(t2.index);
+                }
+            }
+        }
+        return;
+    }
+
 
     if (node1->left && node2->right) {
         check_BVH_intersection(node1->left, node2->right);
