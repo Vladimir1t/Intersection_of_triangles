@@ -17,7 +17,8 @@ int main() {
     double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
     for (int i = 0; i < number_tr; ++i) {
 
-        std::cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
+        if (!(std::cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3))
+            break;
         Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
         tr_int.add_triangle(tr);
     }
