@@ -29,18 +29,8 @@ target_link_libraries(test.x test_lib)
 target_compile_options(test.x PRIVATE ${CMAKE_CXX_FLAGS})
 
 # -DCMAKE_BUILD_TYPE=Release -S . -B build
-# cmake --build buildcmake
+# cmake --build build
 # ./build/intersection.x
 #
 # cmake .. -DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=./../../../../include-what-you-use/build/bin/include-what-you-use
-#
-# индивидуальная работа с таргетами
-# allbraces, allperms - библиотеки
-# set(APPS allbraces; allperms)
-#
-# foreach(APP ${APPS})
-#    add_executable(${APP} ${APP}.cpp)
-#    target_compile_features(${APP} PRIVATE cxx_std_20)
-#    target_link_libraries(${APP} frame)
-#    target_link_libraries(${APP} comblib)
-# endforeach()
+# make

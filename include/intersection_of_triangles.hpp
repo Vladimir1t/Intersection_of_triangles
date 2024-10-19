@@ -11,17 +11,17 @@ namespace Geometry {
 uint64_t counter = 0;
 
 struct Vect {
-    double x;
-    double y;
-    double z;
-    double arr[3];
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    double arr[3] = {};
 
     Vect(double x, double y, double z) : x(x), y(y), z(z) {
         arr[0] = x;
         arr[1] = y;
         arr[2] = z;
     }  
-    Vect() {}
+    Vect() = default;
 
     Vect operator-(const Vect& other) const {
         return {x - other.x, y - other.y, z - other.z};

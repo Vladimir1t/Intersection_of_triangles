@@ -37,7 +37,5 @@ int main() {
         std::cout << '[' << Geometry::counter << "]\n";
     #endif
 
-    delete bvh_root;
-
     return 0;
 }
