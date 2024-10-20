@@ -10,8 +10,9 @@ set(test_srcs
 set(srcs
     main.cpp
 )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}-D NDEBUG -std=c++20")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(FLAGS_DEBUG_1   "-g")
+set(FLAGS_DEBUG_2   "-D NDEBUG")
 
 add_library(intersection_lib STATIC ${srcs})
 target_include_directories(intersection_lib PUBLIC "include")
@@ -26,7 +27,8 @@ add_executable(test.x ${test_srcs})
 target_link_libraries(test.x test_lib)
 
 # target_compile_options(intersection.x PRIVATE ${CMAKE_CXX_FLAGS})
-target_compile_options(test.x PRIVATE ${CMAKE_CXX_FLAGS})
+target_compile_options(test.x PRIVATE "$<$<CONFIG:RELEASE>:${CMAKE_CXX_FLAGS_RELEASE}>" ${FLAGS_DEBUG_1} ${FLAGS_DEBUG_2})
+target_compile_options(intersection.x PRIVATE "$<$<CONFIG:RELEASE>:${CMAKE_CXX_FLAGS_RELEASE}>" ${FLAGS_DEBUG_1} ${FLAGS_DEBUG_2})
 
 # -DCMAKE_BUILD_TYPE=Release -S . -B build
 # cmake --build build
