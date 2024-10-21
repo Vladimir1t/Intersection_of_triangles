@@ -1,5 +1,4 @@
 # Triangle Intersection Detection
-
 ---
 
 ## Overview
@@ -82,6 +81,8 @@ The core algorithm consists of several stages:
 
 int main() {
     Geometry::Triangle_intersection tr_int;
+    Geometry::Optimisation opt;
+
     uint64_t number_tr;
     
     std::cin >> number_tr;
@@ -93,7 +94,9 @@ int main() {
         tr_int.add_triangle(tr);
     }
     
-    tr_int.intersect_all();
+    Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
+    opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
+
     return 0;
 }
 ```
@@ -133,8 +136,8 @@ run_test(triangle1, triangle2, false, "Intersection Test 1");
 │   └── intersection_of_triangles.hpp   # Header file with the algorithm
 ├── src/
 │   └── tests.cpp                       # Test suite
-├── Makefile                            # Build instructions
-├── README.md                           # Documentation
+├── CMakeLists.txt                      # Build instructions
+├── readme.md                           # Documentation
 └── main.cpp                            # Main program
 ```
 
@@ -145,6 +148,7 @@ The program includes a comprehensive test suite. Tests cover the following cases
 - Triangles far apart.
 - One triangle contained inside another.
 - Triangles sharing an edge or vertex.
+- The array of triangles 
 
 You can add more test cases by modifying `src/tests.cpp`.
 
@@ -153,17 +157,17 @@ You can add more test cases by modifying `src/tests.cpp`.
  All tests passed 
 ```
 
-## Оптимизация 
+## Optimization
 
-Bounding Volume Hierarchy [BVH]:https://en.wikipedia.org/wiki/Bounding_volume_hierarchy — это иерархическая структура данных, которая используется для ускорения проверки пересечений между объектами в 3D пространстве, такими как треугольники. Основная идея заключается в том, что вместо того, чтобы проверять пересечения между всеми объектами напрямую, можно сгруппировать объекты в более крупные объемы (bounding volumes) и проверять пересечения между этими объемами. Если объёмы не пересекаются, то можно избежать проверки всех объектов, находящихся внутри них.
+Bounding Volume Hierarchy [BVH](https://en.wikipedia.org/wiki/Bounding_volume_hierarchy) is a hierarchical data structure used to accelerate intersection checks between objects in 3D space, such as triangles. The core idea is that instead of checking intersections between all objects directly, objects can be grouped into larger volumes (bounding volumes), and intersections are checked between these volumes. If the volumes do not intersect, then we can skip checking all the objects contained within them.
 
-Ниже приведён пошаговый процесс построения и использования BVH для пересечения треугольников:
+Below is a step-by-step process of building and using BVH for triangle intersections:
 
-1. Определение Bounding Volume
-Для каждого треугольника (или объекта) создаём ограничивающий объём (Bounding Volume), который будет ограждать этот объект. В случае треугольников чаще всего используют AABB (Axis-Aligned Bounding Box), так как они просты в вычислении.
+1. **Defining the Bounding Volume**  
+   For each triangle (or object), we create a bounding volume that encapsulates this object. In the case of triangles, an Axis-Aligned Bounding Box (AABB) is often used because it is simple to compute.
 
-2. Построение дерева BVH
-Построение дерева BVH — это процесс рекурсивного разбиения набора треугольников на группы и построения ограничивающих объёмов для каждой группы. Это можно сделать несколькими способами, но часто используется подход разделения вдоль осей (аналогично KD-дереву).
+2. **Building the BVH Tree**  
+   Building a BVH tree involves recursively partitioning the set of triangles into groups and constructing bounding volumes for each group. This can be done in several ways, but a common approach is axis-aligned splitting (similar to a KD-tree).
 
-3. Определение пересекающихся поддеревьев
-Если поддеревья пересекаются, то смотрим пересечение соответсвующих треугольников.
+3. **Determining Intersecting Subtrees**  
+   If the subtrees intersect, we then check for intersections between the corresponding triangles.
