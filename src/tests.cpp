@@ -55,7 +55,7 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
     in.close();
 
     Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
-    opt.check_BVH_intersection(bvh_root->left, bvh_root->right);
+    opt.check_BVH_intersection(bvh_root->left, bvh_root->right, tr_int);
     delete bvh_root;
 
     bool res = (tr_int.set_index == res_ref);

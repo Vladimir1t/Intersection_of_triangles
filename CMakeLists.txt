@@ -26,7 +26,6 @@ target_include_directories(test_lib PUBLIC "include")
 add_executable(test.x ${test_srcs})
 target_link_libraries(test.x test_lib)
 
-# target_compile_options(intersection.x PRIVATE ${CMAKE_CXX_FLAGS})
 target_compile_options(test.x PRIVATE "$<$<CONFIG:RELEASE>:${CMAKE_CXX_FLAGS_RELEASE}>" ${FLAGS_DEBUG_1} ${FLAGS_DEBUG_2})
 target_compile_options(intersection.x PRIVATE "$<$<CONFIG:RELEASE>:${CMAKE_CXX_FLAGS_RELEASE}>" ${FLAGS_DEBUG_1} ${FLAGS_DEBUG_2})
 

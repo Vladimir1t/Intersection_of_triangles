@@ -8,15 +8,17 @@
 
 namespace Geometry {
 
-uint64_t counter = 0;
+template <typename vect_t> 
+class Vect {     
 
-struct Vect {
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
-    double arr[3] = {};
+public:
 
-    Vect(double x, double y, double z) : x(x), y(y), z(z) {
+    vect_t x = 0.0;
+    vect_t y = 0.0;
+    vect_t z = 0.0;
+    vect_t arr[3] = {};
+
+    Vect(vect_t x, vect_t y, vect_t z) : x(x), y(y), z(z) {
         arr[0] = x;
         arr[1] = y;
         arr[2] = z;
@@ -31,22 +33,22 @@ struct Vect {
         return {x + other.x, y + other.y, z + other.z};
     }
 
-    template <typename T>
-    Vect operator*(const T scalar) const {
+    //template <typename T>
+    Vect operator*(const vect_t scalar) const {
         return {x * scalar, y * scalar, z * scalar};
     }
 
-    template <typename T>
-    Vect operator/(T scalar) const {
+    //template <typename T>
+    Vect operator/(vect_t scalar) const {
         return Vect(x / scalar, y / scalar, z / scalar);
     }
 
-    double count_dot(const Vect& vect) const { 
+    vect_t count_dot(const Vect& vect) const { 
         return vect.x * x + vect.y * y + vect.z * z;
     }
 
     Vect normalize() const {
-        double length = std::sqrt(x * x + y * y + z * z);
+        vect_t length = std::sqrt(x * x + y * y + z * z);
 
         if (length == 0) 
             return Vect(0, 0, 0);          
@@ -63,14 +65,16 @@ struct Vect {
     }
 };
 
-struct Triangle {
-    Vect a;
-    Vect b;
-    Vect c;
+class Triangle { // class
+
+public:
+    Vect<double> a;
+    Vect<double> b;
+    Vect<double> c;
 
     uint64_t index;
 
-    Triangle(const Vect& a, const Vect& b, const Vect& c) : a(a), b(b), c(c) {}
+    Triangle(const Vect<double>& a, const Vect<double>& b, const Vect<double>& c) : a(a), b(b), c(c) {}
 };
 
 /** @brief Trinagle_intersection - class with methods of algorithm detecting intersection
@@ -87,26 +91,26 @@ private:
      *  @param tr  tringle 
      *  @return 1 - intersect | 0 - don't intersect 
      */
-    bool ray_intersects_triangle(const Vect& ray_origin, const Vect& ray_dir, const Triangle& tr) {
+    bool ray_intersects_triangle(const Vect<double>& ray_origin, const Vect<double>& ray_dir, const Triangle& tr) const { // static const
 
-        Vect vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
-        Vect edge1 = vertex2 - vertex1;
-        Vect edge2 = vertex3 - vertex1;
+        Vect<double> vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
+        Vect<double> edge1 = vertex2 - vertex1;
+        Vect<double> edge2 = vertex3 - vertex1;
 
-        Vect H = ray_dir.cross(edge2);
+        Vect<double> H = ray_dir.cross(edge2);
         double a = edge1.count_dot(H);
 
         if (std::fabs(a) < epsilon_) 
             return false;
 
         double f = 1 / a;
-        Vect S = ray_origin - vertex1;
+        Vect<double> S = ray_origin - vertex1;
         double u = f * (S.count_dot(H));
 
         if (u < 0 || u > 1) 
             return false;
 
-        Vect Q = S.cross(edge1);
+        Vect<double> Q = S.cross(edge1);
         double v = f * ray_dir.count_dot(Q);
 
         if (v < 0 || u + v > 1)
@@ -121,11 +125,11 @@ private:
             return false;
     }
 
-    bool point_in_triangle(const Vect& point, const Triangle& triangle) {
+    bool point_in_triangle(const Vect<double>& point, const Triangle& triangle) const {
 
-        Vect v1 = triangle.b - triangle.a;
-        Vect v2 = triangle.c - triangle.a;
-        Vect v3 = point - triangle.a;
+        Vect<double> v1 = triangle.b - triangle.a;
+        Vect<double> v2 = triangle.c - triangle.a;
+        Vect<double> v3 = point - triangle.a;
 
         double are_copmplanar = v1.x * (v2.y * v3.z - v2.z * v3.y) - 
                                 v1.y * (v2.x * v3.z - v2.z * v3.x) + 
@@ -151,22 +155,22 @@ private:
         return (u >= -epsilon_) && (v >= -epsilon_) && (u + v <= 1 + epsilon_);
     }
 
-    Vect normal(const Triangle& tr) {
+    static Vect<double> normal(const Triangle& tr) {
         return (tr.b - tr.a).cross(tr.c - tr.a).normalize();
     }
 
-    bool are_planes_parallel(const Triangle& t1, const Triangle& t2) {
+    bool are_planes_parallel(const Triangle& t1, const Triangle& t2) const {
 
-        Vect norm1 = normal(t1);
-        Vect norm2 = normal(t2);
+        Vect<double> norm1 = normal(t1);
+        Vect<double> norm2 = normal(t2);
         double dot_product = norm1.count_dot(norm2);
 
         return (dot_product > 1 - epsilon_ || dot_product < -(1 - epsilon_)); 
     }
 
-    bool are_triangles_coplanar(const Triangle& tr1, const Triangle& tr2) {
+    bool are_triangles_coplanar(const Triangle& tr1, const Triangle& tr2) const {
 
-        Vect norm = normal(tr1);
+        Vect<double> norm = normal(tr1);
         double d1 = norm.count_dot(tr1.a); 
         double d2 = norm.count_dot(tr2.a); 
 
@@ -175,13 +179,14 @@ private:
 
 public: 
 
-    std::vector<Triangle>            triangle_array; 
-    inline static std::set<uint64_t> set_index; 
+    std::vector<Triangle>   triangle_array; 
+    std::set<uint64_t> set_index;    
 
     /** @brief add triangle - push a new triangle into vector  
      *  @param tr new trinagle 
      */
     void add_triangle(Triangle& tr) {
+    
         triangle_array.push_back(tr);
         triangle_array.back().index = triangle_array.size() - 1;
         #ifndef NDEBUG
@@ -191,6 +196,7 @@ public:
     
     #ifndef NDEBUG
     void intersect_all() { 
+
         for (uint64_t i = 0; i < triangle_array.size(); ++i)
             for (uint64_t j = i + 1; j < triangle_array.size(); ++j) {
                 if (intersects_triangle(triangle_array.at(i), triangle_array.at(j)) == true) {
@@ -206,10 +212,8 @@ public:
      *  @param t1 first triangle
      *  @param t2 second triangle 
      */
-    bool intersects_triangle(const Triangle& t1, const Triangle& t2) {
+    bool intersects_triangle(const Triangle& t1, const Triangle& t2) const {
         
-        // counter++;
-
         if (are_planes_parallel(t1, t2)) {
             if (!are_triangles_coplanar(t1, t2)) {
                 return false; 
@@ -255,18 +259,20 @@ class Optimisation {
 private:
     /** @brief AABB (axis-aligned bounding box)
     */
-    struct AABB {
+    class AABB {
 
-        Vect min_point, max_point;
+        Vect<double> min_point, max_point;
+
+    public:
 
         AABB() {
-            min_point = Vect( std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity());
-            max_point = Vect(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+            min_point = Vect<double>( std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity());
+            max_point = Vect<double>(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
         }
 
-        AABB(const Vect& min_point, const Vect& max_point) : min_point(min_point), max_point(max_point) {}
+        AABB(const Vect<double>& min_point, const Vect<double>& max_point) : min_point(min_point), max_point(max_point) {}
 
-        void expand(const Vect& point) {
+        void expand(const Vect<double>& point) {
 
             min_point.x = std::min(min_point.x, point.x);
             min_point.y = std::min(min_point.y, point.y);
@@ -278,12 +284,12 @@ private:
         }
 
         AABB merge(const AABB& a, const AABB& b) const {
-            Vect min_point(
+            Vect<double> min_point(
                 std::min(a.min_point.x, b.min_point.x),
                 std::min(a.min_point.y, b.min_point.y),
                 std::min(a.min_point.z, b.min_point.z)
             );
-            Vect max_point(
+            Vect<double> max_point(
                 std::max(a.max_point.x, b.max_point.x),
                 std::max(a.max_point.y, b.max_point.y),
                 std::max(a.max_point.z, b.max_point.z)
@@ -292,7 +298,7 @@ private:
         }
 
         double surface_area() const {
-            Vect diff = {max_point.x - min_point.x, max_point.y - min_point.y, max_point.z - min_point.z};
+            Vect<double> diff = {max_point.x - min_point.x, max_point.y - min_point.y, max_point.z - min_point.z};
             return 2.0f * (diff.x * diff.y + diff.x * diff.z + diff.y * diff.z);
         }
 
@@ -336,11 +342,10 @@ public:
 private:
     /** @brief create_bounding_box - create AABB for the triangles 
      */
-    AABB create_bounding_box(const std::vector<Triangle>& triangles) {
+    static AABB create_bounding_box(const std::vector<Triangle>& triangles) {
         
         AABB box = {};
         for (auto tr: triangles) {
-             counter++;
             box.expand(tr.a);
             box.expand(tr.b);
             box.expand(tr.c);
@@ -348,7 +353,7 @@ private:
         return box;
     }
 
-    size_t find_best_split(std::vector<Triangle>& triangles, const Geometry::Optimisation::AABB& box) {
+    static size_t find_best_split(std::vector<Triangle>& triangles, const Geometry::Optimisation::AABB& box) {
 
         double best_cost  = std::numeric_limits<float>::infinity();
         size_t best_split = 0;
@@ -399,7 +404,7 @@ public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param tringles 
      */
-    BVH_node* build_BVH(std::vector<Triangle>& triangles) {
+    BVH_node* build_BVH(std::vector<Triangle>& triangles) const {
 
         if (triangles.size() == 1) {
             BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
@@ -439,18 +444,16 @@ public:
      *  @param node1 - right node of a subtree
      *  @param node2 - left node of a subtree
      */
-    void check_BVH_intersection(BVH_node* node1, BVH_node* node2) {
-
-    Triangle_intersection tr_int;
+    static void check_BVH_intersection(BVH_node* node1, BVH_node* node2, Triangle_intersection& tr_int) {
 
     if (node1->left && node1->right) {          
-        check_BVH_intersection(node1->left, node1->right);
+        check_BVH_intersection(node1->left, node1->right, tr_int);
     }
     if (node2->left && node2->right) {         
-        check_BVH_intersection(node2->left, node2->right);
+        check_BVH_intersection(node2->left, node2->right, tr_int);
     }
 
-    if (!node1->bounding_box.intersects(node2->bounding_box)) {  // AABB don,t intersect
+    if (!node1->bounding_box.intersects(node2->bounding_box)) {  
         #ifndef NDEBUG
             std::cout << "AABB do not intesect\n";
         #endif
@@ -479,16 +482,16 @@ public:
     }
 
     if (node1->left && node2->right) {
-        check_BVH_intersection(node1->left, node2->right);
+        check_BVH_intersection(node1->left, node2->right, tr_int);
     }
     if (node1->right && node2->left) {
-        check_BVH_intersection(node1->right, node2->left);
+        check_BVH_intersection(node1->right, node2->left, tr_int);
     }
     if (node1->left && node2->left) {
-        check_BVH_intersection(node1->left, node2->left);
+        check_BVH_intersection(node1->left, node2->left, tr_int);
     }
     if (node1->right && node2->right) {
-        check_BVH_intersection(node1->right, node2->right);
+        check_BVH_intersection(node1->right, node2->right, tr_int);
     }
 }
 };
