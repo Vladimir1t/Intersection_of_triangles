@@ -8,7 +8,7 @@
 
 namespace Geometry {
 
-template <typename vect_t> 
+template <class vect_t> 
 class Vect {     
 
 public:
