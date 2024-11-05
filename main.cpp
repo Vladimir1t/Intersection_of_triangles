@@ -10,6 +10,7 @@ int main() {
     Geometry::Optimisation opt;
 
     uint64_t number_tr = 0;
+    
     std::cin >> number_tr;
     if (number_tr <= 0)
         return 0;
@@ -26,18 +27,12 @@ int main() {
     #ifndef NDEBUG
         tr_int.intersect_all();
     #endif
-    Geometry::Optimisation::BVH_node* bvh_root = opt.build_BVH(tr_int.triangle_array);
+    std::unique_ptr<Geometry::Optimisation::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array);
 
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right, tr_int);
 
     for (uint64_t tr_num: tr_int.set_index)
         std::cout << tr_num << std::endl; 
-    
-    #ifndef NDEBUG
-        //std::cout << '[' << Geometry::counter << "]\n";
-    #endif
-
-    delete bvh_root;
 
     return 0;
 }

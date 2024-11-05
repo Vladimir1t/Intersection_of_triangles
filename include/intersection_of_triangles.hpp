@@ -5,6 +5,7 @@
 #include <limits>
 #include <algorithm>
 #include <cmath>
+#include <list>
 
 namespace Geometry {
 
@@ -16,13 +17,8 @@ public:
     vect_t x = 0.0;
     vect_t y = 0.0;
     vect_t z = 0.0;
-    vect_t arr[3] = {};
 
-    Vect(vect_t x, vect_t y, vect_t z) : x(x), y(y), z(z) {
-        arr[0] = x;
-        arr[1] = y;
-        arr[2] = z;
-    }  
+    Vect(vect_t x, vect_t y, vect_t z) : x(x), y(y), z(z) {}  
     Vect() = default;
 
     Vect operator-(const Vect& other) const {
@@ -33,13 +29,11 @@ public:
         return {x + other.x, y + other.y, z + other.z};
     }
 
-    //template <typename T>
-    Vect operator*(const vect_t scalar) const {
+    Vect operator*(const vect_t& scalar) const {
         return {x * scalar, y * scalar, z * scalar};
     }
 
-    //template <typename T>
-    Vect operator/(vect_t scalar) const {
+    Vect operator/(double scalar) const {
         return Vect(x / scalar, y / scalar, z / scalar);
     }
 
@@ -48,7 +42,7 @@ public:
     }
 
     Vect normalize() const {
-        vect_t length = std::sqrt(x * x + y * y + z * z);
+        double length = std::sqrt(x * x + y * y + z * z);
 
         if (length == 0) 
             return Vect(0, 0, 0);          
@@ -65,7 +59,7 @@ public:
     }
 };
 
-class Triangle { // class
+class Triangle { 
 
 public:
     Vect<double> a;
@@ -75,6 +69,21 @@ public:
     uint64_t index;
 
     Triangle(const Vect<double>& a, const Vect<double>& b, const Vect<double>& c) : a(a), b(b), c(c) {}
+
+    Vect<double> normal() const {
+        return (b - a).cross(c - a).normalize();
+    }
+
+    bool are_triangles_coplanar(const Triangle& other_tr) const {
+
+        const double epsilon_ = 0.00000001;
+
+        Vect<double> norm = other_tr.normal();
+        double d1 = norm.count_dot(a); 
+        double d2 = norm.count_dot(other_tr.a); 
+
+        return std::abs(d2 - d1) < epsilon_; 
+    }
 };
 
 /** @brief Trinagle_intersection - class with methods of algorithm detecting intersection
@@ -83,7 +92,7 @@ class Triangle_intersection {
 
 private:
 
-    const double epsilon_ = 0.000000001;
+    const double epsilon_ = 0.00000001;
 
     /** @brief ray_intersects_triangle - detect the intersection of a ray(trinagle side) and another triangle 
      *  @param ray_origin vector 
@@ -118,11 +127,7 @@ private:
         
         double t = f * edge2.count_dot(Q);
 
-        if (t > epsilon_ && t < 1 + epsilon_)   // intersection_point = ray_origin + ray_dir * t 
-            return true;
-
-        else 
-            return false;
+        return (t > epsilon_ && t - epsilon_ < 1);   // intersection_point = ray_origin + ray_dir * t 
     }
 
     bool point_in_triangle(const Vect<double>& point, const Triangle& triangle) const {
@@ -168,19 +173,10 @@ private:
         return (dot_product > 1 - epsilon_ || dot_product < -(1 - epsilon_)); 
     }
 
-    bool are_triangles_coplanar(const Triangle& tr1, const Triangle& tr2) const {
-
-        Vect<double> norm = normal(tr1);
-        double d1 = norm.count_dot(tr1.a); 
-        double d2 = norm.count_dot(tr2.a); 
-
-        return std::abs(d2 - d1) < epsilon_; 
-    }
-
 public: 
 
-    std::vector<Triangle>   triangle_array; 
-    std::set<uint64_t> set_index;    
+    std::vector<Triangle> triangle_array; 
+    std::set<uint64_t>    set_index;    
 
     /** @brief add triangle - push a new triangle into vector  
      *  @param tr new trinagle 
@@ -209,39 +205,39 @@ public:
     #endif
 
     /** @brief intersects_triangle - detect intersection between two triangles 
-     *  @param t1 first triangle
-     *  @param t2 second triangle 
+     *  @param tr1 first triangle
+     *  @param tr2 second triangle 
      */
-    bool intersects_triangle(const Triangle& t1, const Triangle& t2) const {
+    bool intersects_triangle(const Triangle& tr1, const Triangle& tr2) const {
         
-        if (are_planes_parallel(t1, t2)) {
-            if (!are_triangles_coplanar(t1, t2)) {
+        if (are_planes_parallel(tr1, tr2)) {
+            if (!tr1.are_triangles_coplanar(tr2)) {
                 return false; 
             }
         }
-        if (ray_intersects_triangle(t1.a, t1.b - t1.a, t2) ||
-            ray_intersects_triangle(t1.b, t1.c - t1.b, t2) ||
-            ray_intersects_triangle(t1.c, t1.a - t1.c, t2)) {
+        if (ray_intersects_triangle(tr1.a, tr1.b - tr1.a, tr2) ||
+            ray_intersects_triangle(tr1.b, tr1.c - tr1.b, tr2) ||
+            ray_intersects_triangle(tr1.c, tr1.a - tr1.c, tr2)) {
             #ifndef NDEBUG
                 std::cout << "[ 1 ]\n";
             #endif
             return true;
         }
-        if (ray_intersects_triangle(t2.a, t2.b - t2.a, t1) ||
-            ray_intersects_triangle(t2.b, t2.c - t2.b, t1) ||
-            ray_intersects_triangle(t2.c, t2.a - t2.c, t1)) {
+        if (ray_intersects_triangle(tr2.a, tr2.b - tr2.a, tr1) ||
+            ray_intersects_triangle(tr2.b, tr2.c - tr2.b, tr1) ||
+            ray_intersects_triangle(tr2.c, tr2.a - tr2.c, tr1)) {
             #ifndef NDEBUG
                 std::cout << "[ 2 ]\n";
             #endif
             return true;
         }
-        if (point_in_triangle(t1.a, t2) || point_in_triangle(t1.b, t2) || point_in_triangle(t1.c, t2)) {
+        if (point_in_triangle(tr1.a, tr2) || point_in_triangle(tr1.b, tr2) || point_in_triangle(tr1.c, tr2)) {
             #ifndef NDEBUG
                 std::cout << "[ 3 ]\n";
             #endif
             return true;
         }
-        if (point_in_triangle(t2.a, t1) || point_in_triangle(t2.b, t1) || point_in_triangle(t2.c, t1)) {
+        if (point_in_triangle(tr2.a, tr1) || point_in_triangle(tr2.b, tr1) || point_in_triangle(tr2.c, tr1)) {
             #ifndef NDEBUG
                 std::cout << "[ 4 ]\n";
             #endif
@@ -260,6 +256,8 @@ private:
     /** @brief AABB (axis-aligned bounding box)
     */
     class AABB {
+
+    private:
 
         Vect<double> min_point, max_point;
 
@@ -326,13 +324,16 @@ private:
     };
 
 public:
+
     /** @brief node of bounding volume hierarchy (BVH)
      */
     struct BVH_node {
         AABB bounding_box;
 
-        BVH_node* left  = nullptr;
-        BVH_node* right = nullptr;
+        // typename std::vector<BVH_node>::iterator left  = 0;
+        // typename std::vector<BVH_node>::iterator right = 0;
+        std::unique_ptr<BVH_node> left  = nullptr;
+        std::unique_ptr<BVH_node> right = nullptr;
 
         std::vector<Triangle> triangles;
 
@@ -340,12 +341,14 @@ public:
     };
 
 private:
+
+
     /** @brief create_bounding_box - create AABB for the triangles 
      */
     static AABB create_bounding_box(const std::vector<Triangle>& triangles) {
         
         AABB box = {};
-        for (auto tr: triangles) {
+        for (auto& tr: triangles) {
             box.expand(tr.a);
             box.expand(tr.b);
             box.expand(tr.c);
@@ -359,21 +362,24 @@ private:
         size_t best_split = 0;
         size_t step       = 0;
 
-        if (triangles.size() > 140) 
-            step = 70;
-        else if (triangles.size() > 20) 
-            step = 10;
-        else if (triangles.size() > 4) 
-            step = 2;
+        const size_t BIG_STEP    = 70;
+        const size_t MIDDLE_STEP = 10;
+        const size_t SMALL_STEP  = 2;
+
+        if (triangles.size() > BIG_STEP * 2) 
+            step = BIG_STEP;
+        else if (triangles.size() > MIDDLE_STEP * 2) 
+            step = MIDDLE_STEP;
+        else if (triangles.size() > SMALL_STEP * 2) 
+            step = SMALL_STEP;
         else 
             step = 1;
 
         double parent_area = box.surface_area();
         
-        int axis = 0;  
-        std::sort(triangles.begin(), triangles.end(), [axis](const Triangle& tr1, const Triangle& tr2) {
-            double centroid_A = (tr1.a.arr[axis] + tr1.b.arr[axis] + tr1.c.arr[axis]) / 3.0f;
-            double centroid_B = (tr2.a.arr[axis] + tr2.b.arr[axis] + tr2.c.arr[axis]) / 3.0f;
+        std::sort(triangles.begin(), triangles.end(), [](const Triangle& tr1, const Triangle& tr2) {  // sort by x
+            double centroid_A = (tr1.a.x + tr1.b.x + tr1.c.x) / 3.0f;
+            double centroid_B = (tr2.a.x + tr2.b.x + tr2.c.x) / 3.0f;
             return centroid_A < centroid_B;
         });
 
@@ -401,14 +407,17 @@ private:
     }
 
 public:
+
     /** @brief build_BVH - recursively build BVH tree
      *  @param tringles 
      */
-    BVH_node* build_BVH(std::vector<Triangle>& triangles) const {
+    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle>& triangles) {   
 
         if (triangles.size() == 1) {
-            BVH_node* leaf_node = new BVH_node(create_bounding_box(triangles));
+
+            auto leaf_node = std::make_unique<BVH_node>(create_bounding_box(triangles));
             leaf_node->triangles = triangles;
+            
             return leaf_node;
         }
         AABB box = create_bounding_box(triangles);
@@ -416,8 +425,9 @@ public:
         size_t best_split = find_best_split(triangles, box);
 
         if (best_split == 0 || best_split == triangles.size()) {
-            BVH_node* leaf_node = new BVH_node(box);
+            auto leaf_node = std::make_unique<BVH_node>(box);
             leaf_node->triangles = triangles;
+            
             return leaf_node;
         }
         
@@ -431,20 +441,20 @@ public:
                 std::cout << "right ind " << tr.index << '\n';
         #endif
 
-        BVH_node* node = new BVH_node(box);
+        auto node = std::make_unique<BVH_node>(box);
         node->triangles = triangles;
         
         node->left  = build_BVH(left_triangles);
         node->right = build_BVH(right_triangles);
-
+       
         return node;
+    
     }
-
     /** @brief check_BVH_intersection - detect intersection between leafs or subtrees
      *  @param node1 - right node of a subtree
      *  @param node2 - left node of a subtree
      */
-    static void check_BVH_intersection(BVH_node* node1, BVH_node* node2, Triangle_intersection& tr_int) {
+    static void check_BVH_intersection(std::unique_ptr<BVH_node>& node1, std::unique_ptr<BVH_node>& node2, Triangle_intersection& tr_int) {
 
     if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right, tr_int);
