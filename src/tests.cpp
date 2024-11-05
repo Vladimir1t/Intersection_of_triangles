@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include <cstdint>
+#include <memory>
 
 #include "intersection_of_triangles.hpp"
 

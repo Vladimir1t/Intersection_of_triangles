@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdint>
+#include <memory>
 #include <set>
 
 #include "intersection_of_triangles.hpp"
