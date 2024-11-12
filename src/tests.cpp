@@ -39,20 +39,22 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
 
     Geometry::Optimisation opt;
 
-    std::ifstream in;
-    in.open(file_name);
-    if (!in.is_open()) {
-        std::cerr << "File didn't open\n";
+    std::ifstream in_file;
+    in_file.open(file_name);
+    if (!in_file.is_open()) {
+        std::cerr << "File wasn't opened\n";
         std::exit(0);
     }
     uint64_t number_tr = 0;
-    in_file >> number_tr;
+    if (!(in_file >> number_tr).good())
+        return;
 
     double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
     for (int i = 0; i < number_tr; ++i) {
-        in_file >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
-        Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
-        tr_int.add_triangle(tr);
+        if ((in_file >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3).good()) {
+            Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
+            tr_int.add_triangle(tr);
+        }
     }
     in_file.close();
 
@@ -63,7 +65,7 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
 
     tr_int.set_index.clear();
     if (res != true) {
-        std::cout << "Test faild\n";
+        std::cout << "Test failed\n";
         return false;
     }
     else 

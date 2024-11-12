@@ -330,8 +330,6 @@ public:
     struct BVH_node {
         AABB bounding_box;
 
-        // typename std::vector<BVH_node>::iterator left  = 0;
-        // typename std::vector<BVH_node>::iterator right = 0;
         std::unique_ptr<BVH_node> left  = nullptr;
         std::unique_ptr<BVH_node> right = nullptr;
 
@@ -341,7 +339,6 @@ public:
     };
 
 private:
-
 
     /** @brief create_bounding_box - create AABB for the triangles 
      */
