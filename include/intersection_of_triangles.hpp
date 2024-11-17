@@ -395,8 +395,8 @@ private:
 
             coord_t sah_cost = 2.0f + (left_area / parent_area) * left_triangles.size() + 
                                      (right_area / parent_area) * right_triangles.size() +
-                                     0.1f * // abs(static_cast<int>(left_triangles.size()) - static_cast<int>(right_triangles.size()));
-                                     (std::max(left_triangles.size(), right_triangles.size()) - std::min(left_triangles.size(), right_triangles.size()));
+                                     0.1f * (std::max(left_triangles.size(), right_triangles.size()) - 
+                                             std::min(left_triangles.size(), right_triangles.size()));
 
             if (sah_cost < best_cost && !left_triangles.empty() && !right_triangles.empty()) {
                 best_cost = sah_cost;
