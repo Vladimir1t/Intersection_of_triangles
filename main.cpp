@@ -14,8 +14,8 @@
  */
 int main() {
 
-    Geometry::Triangle_intersection tr_int;
-    Geometry::Optimisation opt;
+    Geometry::Triangle_intersection<double> tr_int;
+    Geometry::Optimisation<double> opt;
 
     uint64_t number_tr = 0;
     
@@ -29,14 +29,14 @@ int main() {
 
         if (!(std::cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3).good())
             break;
-        Geometry::Triangle tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
+        Geometry::Triangle<double> tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
         tr_int.add_triangle(tr);
     }
 
     #ifndef NDEBUG
         tr_int.intersect_all();
     #endif
-    std::unique_ptr<Geometry::Optimisation::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array);
+    std::unique_ptr<Geometry::Optimisation<double>::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array);
 
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right, tr_int);
 

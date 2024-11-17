@@ -9,16 +9,16 @@
 
 namespace Geometry {
 
-template <class vect_t> 
+template<class coord_t>
 class Vect {     
 
 public:
 
-    vect_t x = 0.0;
-    vect_t y = 0.0;
-    vect_t z = 0.0;
+    coord_t x = 0.0;
+    coord_t y = 0.0;
+    coord_t z = 0.0;
 
-    Vect(vect_t x, vect_t y, vect_t z) : x(x), y(y), z(z) {}  
+    Vect(coord_t x, coord_t y, coord_t z) : x(x), y(y), z(z) {}  
     Vect() = default;
 
     Vect operator-(const Vect& other) const {
@@ -29,20 +29,20 @@ public:
         return {x + other.x, y + other.y, z + other.z};
     }
 
-    Vect operator*(const vect_t& scalar) const {
+    Vect operator*(const coord_t& scalar) const {
         return {x * scalar, y * scalar, z * scalar};
     }
 
-    Vect operator/(double scalar) const {
+    Vect operator/(coord_t scalar) const {
         return Vect(x / scalar, y / scalar, z / scalar);
     }
 
-    vect_t count_dot(const Vect& vect) const { 
+    coord_t count_dot(const Vect& vect) const { 
         return vect.x * x + vect.y * y + vect.z * z;
     }
 
     Vect normalize() const {
-        double length = std::sqrt(x * x + y * y + z * z);
+        coord_t length = std::sqrt(x * x + y * y + z * z);
 
         if (length == 0) 
             return Vect(0, 0, 0);          
@@ -59,28 +59,29 @@ public:
     }
 };
 
+template<class coord_t>
 class Triangle { 
 
 public:
-    Vect<double> a;
-    Vect<double> b;
-    Vect<double> c;
+    Vect<coord_t> a;
+    Vect<coord_t> b;
+    Vect<coord_t> c;
 
     uint64_t index;
 
-    Triangle(const Vect<double>& a, const Vect<double>& b, const Vect<double>& c) : a(a), b(b), c(c) {}
+    Triangle(const Vect<coord_t>& a, const Vect<coord_t>& b, const Vect<coord_t>& c) : a(a), b(b), c(c) {}
 
-    Vect<double> normal() const {
+    Vect<coord_t> normal() const {
         return (b - a).cross(c - a).normalize();
     }
 
     bool are_triangles_coplanar(const Triangle& other_tr) const {
 
-        const double epsilon_ = 0.00000001;
+        const coord_t epsilon_ = 0.00000001;
 
-        Vect<double> norm = other_tr.normal();
-        double d1 = norm.count_dot(a); 
-        double d2 = norm.count_dot(other_tr.a); 
+        Vect<coord_t> norm = other_tr.normal();
+        coord_t d1 = norm.count_dot(a); 
+        coord_t d2 = norm.count_dot(other_tr.a); 
 
         return std::abs(d2 - d1) < epsilon_; 
     }
@@ -88,11 +89,12 @@ public:
 
 /** @brief Trinagle_intersection - class with methods of algorithm detecting intersection
  */  
+template<class coord_t>
 class Triangle_intersection {
 
 private:
 
-    const double epsilon_ = 0.00000001;
+    const coord_t epsilon_ = 0.00000001;
 
     /** @brief ray_intersects_triangle - detect the intersection of a ray(trinagle side) and another triangle 
      *  @param ray_origin vector 
@@ -100,88 +102,88 @@ private:
      *  @param tr  tringle 
      *  @return 1 - intersect | 0 - don't intersect 
      */
-    bool ray_intersects_triangle(const Vect<double>& ray_origin, const Vect<double>& ray_dir, const Triangle& tr) const { // static const
+    bool ray_intersects_triangle(const Vect<coord_t>& ray_origin, const Vect<coord_t>& ray_dir, const Triangle<coord_t>& tr) const { // static const
 
-        Vect<double> vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
-        Vect<double> edge1 = vertex2 - vertex1;
-        Vect<double> edge2 = vertex3 - vertex1;
+        Vect<coord_t> vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
+        Vect<coord_t> edge1 = vertex2 - vertex1;
+        Vect<coord_t> edge2 = vertex3 - vertex1;
 
-        Vect<double> H = ray_dir.cross(edge2);
-        double a = edge1.count_dot(H);
+        Vect<coord_t> H = ray_dir.cross(edge2);
+        coord_t a = edge1.count_dot(H);
 
         if (std::fabs(a) < epsilon_) 
             return false;
 
-        double f = 1 / a;
-        Vect<double> S = ray_origin - vertex1;
-        double u = f * (S.count_dot(H));
+        coord_t f = 1 / a;
+        Vect<coord_t> S = ray_origin - vertex1;
+        coord_t u = f * (S.count_dot(H));
 
         if (u < 0 || u > 1) 
             return false;
 
-        Vect<double> Q = S.cross(edge1);
-        double v = f * ray_dir.count_dot(Q);
+        Vect<coord_t> Q = S.cross(edge1);
+        coord_t v = f * ray_dir.count_dot(Q);
 
         if (v < 0 || u + v > 1)
             return false;
         
-        double t = f * edge2.count_dot(Q);
+        coord_t t = f * edge2.count_dot(Q);
 
         return (t > epsilon_ && t - epsilon_ < 1);   // intersection_point = ray_origin + ray_dir * t 
     }
 
-    bool point_in_triangle(const Vect<double>& point, const Triangle& triangle) const {
+    bool point_in_triangle(const Vect<coord_t>& point, const Triangle<coord_t>& triangle) const {
 
-        Vect<double> v1 = triangle.b - triangle.a;
-        Vect<double> v2 = triangle.c - triangle.a;
-        Vect<double> v3 = point - triangle.a;
+        Vect<coord_t> v1 = triangle.b - triangle.a;
+        Vect<coord_t> v2 = triangle.c - triangle.a;
+        Vect<coord_t> v3 = point - triangle.a;
 
-        double are_copmplanar = v1.x * (v2.y * v3.z - v2.z * v3.y) - 
+        coord_t are_copmplanar = v1.x * (v2.y * v3.z - v2.z * v3.y) - 
                                 v1.y * (v2.x * v3.z - v2.z * v3.x) + 
                                 v1.z * (v2.x * v3.y - v2.y * v3.x);
 
         if (std::fabs(are_copmplanar) > epsilon_)
             return false;           
 
-        double dot00 = v1.count_dot(v1);
-        double dot01 = v1.count_dot(v2);
-        double dot02 = v1.count_dot(v3);
-        double dot11 = v2.count_dot(v2);
-        double dot12 = v2.count_dot(v3);
+        coord_t dot00 = v1.count_dot(v1);
+        coord_t dot01 = v1.count_dot(v2);
+        coord_t dot02 = v1.count_dot(v3);
+        coord_t dot11 = v2.count_dot(v2);
+        coord_t dot12 = v2.count_dot(v3);
 
-        double denom = dot00 * dot11 - dot01 * dot01;
+        coord_t denom = dot00 * dot11 - dot01 * dot01;
         if (std::fabs(denom) < epsilon_)
             return false;           
-        double inv_denom = 1 / denom;
+        coord_t inv_denom = 1 / denom;
 
-        double u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
-        double v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
+        coord_t u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
+        coord_t v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
 
         return (u >= -epsilon_) && (v >= -epsilon_) && (u + v <= 1 + epsilon_);
     }
 
-    static Vect<double> normal(const Triangle& tr) {
+    static Vect<coord_t> normal(const Triangle<coord_t>& tr) {
         return (tr.b - tr.a).cross(tr.c - tr.a).normalize();
     }
 
-    bool are_planes_parallel(const Triangle& t1, const Triangle& t2) const {
+    bool are_planes_parallel(const Triangle<coord_t>& t1, const Triangle<coord_t>& t2) const {
 
-        Vect<double> norm1 = normal(t1);
-        Vect<double> norm2 = normal(t2);
-        double dot_product = norm1.count_dot(norm2);
+        Vect<coord_t> norm1 = normal(t1);
+        Vect<coord_t> norm2 = normal(t2);
+        coord_t dot_product = norm1.count_dot(norm2);
 
         return (dot_product > 1 - epsilon_ || dot_product < -(1 - epsilon_)); 
     }
 
 public: 
 
-    std::vector<Triangle> triangle_array; 
+    std::vector<Triangle<coord_t>> triangle_array; 
     std::set<uint64_t>    set_index;    
 
     /** @brief add triangle - push a new triangle into vector  
      *  @param tr new trinagle 
      */
-    void add_triangle(Triangle& tr) {
+    void add_triangle(Triangle<coord_t>& tr) {
     
         triangle_array.push_back(tr);
         triangle_array.back().index = triangle_array.size() - 1;
@@ -208,7 +210,7 @@ public:
      *  @param tr1 first triangle
      *  @param tr2 second triangle 
      */
-    bool intersects_triangle(const Triangle& tr1, const Triangle& tr2) const {
+    bool intersects_triangle(const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) const {
         
         if (are_planes_parallel(tr1, tr2)) {
             if (!tr1.are_triangles_coplanar(tr2)) {
@@ -250,6 +252,7 @@ public:
 
 /** @brief Optimisation - a class with methods of building BVH tree with AABB
  */
+template<class coord_t>
 class Optimisation {
 
 private:
@@ -259,18 +262,18 @@ private:
 
     private:
 
-        Vect<double> min_point, max_point;
+        Vect<coord_t> min_point, max_point;
 
     public:
 
         AABB() {
-            min_point = Vect<double>( std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity());
-            max_point = Vect<double>(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+            min_point = Vect<coord_t>( std::numeric_limits<coord_t>::infinity(),  std::numeric_limits<coord_t>::infinity(),  std::numeric_limits<coord_t>::infinity());
+            max_point = Vect<coord_t>(-std::numeric_limits<coord_t>::infinity(), -std::numeric_limits<coord_t>::infinity(), -std::numeric_limits<coord_t>::infinity());
         }
 
-        AABB(const Vect<double>& min_point, const Vect<double>& max_point) : min_point(min_point), max_point(max_point) {}
+        AABB(const Vect<coord_t>& min_point, const Vect<coord_t>& max_point) : min_point(min_point), max_point(max_point) {}
 
-        void expand(const Vect<double>& point) {
+        void expand(const Vect<coord_t>& point) {
 
             min_point.x = std::min(min_point.x, point.x);
             min_point.y = std::min(min_point.y, point.y);
@@ -282,12 +285,12 @@ private:
         }
 
         AABB merge(const AABB& a, const AABB& b) const {
-            Vect<double> min_point(
+            Vect<coord_t> min_point(
                 std::min(a.min_point.x, b.min_point.x),
                 std::min(a.min_point.y, b.min_point.y),
                 std::min(a.min_point.z, b.min_point.z)
             );
-            Vect<double> max_point(
+            Vect<coord_t> max_point(
                 std::max(a.max_point.x, b.max_point.x),
                 std::max(a.max_point.y, b.max_point.y),
                 std::max(a.max_point.z, b.max_point.z)
@@ -295,8 +298,8 @@ private:
             return AABB(min_point, max_point);
         }
 
-        double surface_area() const {
-            Vect<double> diff = {max_point.x - min_point.x, max_point.y - min_point.y, max_point.z - min_point.z};
+        coord_t surface_area() const {
+            Vect<coord_t> diff = {max_point.x - min_point.x, max_point.y - min_point.y, max_point.z - min_point.z};
             return 2.0f * (diff.x * diff.y + diff.x * diff.z + diff.y * diff.z);
         }
 
@@ -333,7 +336,7 @@ public:
         std::unique_ptr<BVH_node> left  = nullptr;
         std::unique_ptr<BVH_node> right = nullptr;
 
-        std::vector<Triangle> triangles;
+        std::vector<Triangle<coord_t>> triangles;
 
         BVH_node(const AABB& box) : bounding_box(box) {}
     };
@@ -342,7 +345,7 @@ private:
 
     /** @brief create_bounding_box - create AABB for the triangles 
      */
-    static AABB create_bounding_box(const std::vector<Triangle>& triangles) {
+    static AABB create_bounding_box(const std::vector<Triangle<coord_t>>& triangles) {
         
         AABB box = {};
         for (auto& tr: triangles) {
@@ -353,9 +356,9 @@ private:
         return box;
     }
 
-    static size_t find_best_split(std::vector<Triangle>& triangles, const Geometry::Optimisation::AABB& box) {
+    static size_t find_best_split(std::vector<Triangle<coord_t>>& triangles, const Geometry::Optimisation<coord_t>::AABB& box) {
 
-        double best_cost  = std::numeric_limits<float>::infinity();
+        coord_t best_cost  = std::numeric_limits<coord_t>::infinity();
         size_t best_split = 0;
         size_t step       = 0;
 
@@ -372,27 +375,28 @@ private:
         else 
             step = 1;
 
-        double parent_area = box.surface_area();
+        coord_t parent_area = box.surface_area();
         
-        std::sort(triangles.begin(), triangles.end(), [](const Triangle& tr1, const Triangle& tr2) {  // sort by x
-            double centroid_A = (tr1.a.x + tr1.b.x + tr1.c.x) / 3.0f;
-            double centroid_B = (tr2.a.x + tr2.b.x + tr2.c.x) / 3.0f;
+        std::sort(triangles.begin(), triangles.end(), [](const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) {  // sort by x
+            coord_t centroid_A = (tr1.a.x + tr1.b.x + tr1.c.x) / 3.0f;
+            coord_t centroid_B = (tr2.a.x + tr2.b.x + tr2.c.x) / 3.0f;
             return centroid_A < centroid_B;
         });
 
         for (size_t i = step; i < triangles.size(); i += step) { 
-            std::vector<Triangle> left_triangles(triangles.begin(), triangles.begin() + i);
-            std::vector<Triangle> right_triangles(triangles.begin() + i, triangles.end());
+            std::vector<Triangle<coord_t>> left_triangles(triangles.begin(), triangles.begin() + i);
+            std::vector<Triangle<coord_t>> right_triangles(triangles.begin() + i, triangles.end());
 
             AABB left_box  = create_bounding_box(left_triangles);
             AABB right_box = create_bounding_box(right_triangles);
 
-            double left_area  = left_box.surface_area();
-            double right_area = right_box.surface_area();
+            coord_t left_area  = left_box.surface_area();
+            coord_t right_area = right_box.surface_area();
 
-            double sah_cost = 2.0f + (left_area / parent_area) * left_triangles.size() + 
+            coord_t sah_cost = 2.0f + (left_area / parent_area) * left_triangles.size() + 
                                      (right_area / parent_area) * right_triangles.size() +
-                                     0.1f * abs(static_cast<int>(left_triangles.size()) - static_cast<int>(right_triangles.size()));
+                                     0.1f * // abs(static_cast<int>(left_triangles.size()) - static_cast<int>(right_triangles.size()));
+                                     (std::max(left_triangles.size(), right_triangles.size()) - std::min(left_triangles.size(), right_triangles.size()));
 
             if (sah_cost < best_cost && !left_triangles.empty() && !right_triangles.empty()) {
                 best_cost = sah_cost;
@@ -408,7 +412,7 @@ public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param tringles 
      */
-    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle>& triangles) {   
+    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle<coord_t>>& triangles) {   
 
         if (triangles.size() == 1) {
 
@@ -428,8 +432,8 @@ public:
             return leaf_node;
         }
         
-        std::vector<Triangle> left_triangles (triangles.begin(), triangles.begin() + best_split);
-        std::vector<Triangle> right_triangles(triangles.begin() + best_split, triangles.end());
+        std::vector<Triangle<coord_t>> left_triangles (triangles.begin(), triangles.begin() + best_split);
+        std::vector<Triangle<coord_t>> right_triangles(triangles.begin() + best_split, triangles.end());
 
         #ifndef NDEBUG
             for (auto tr: left_triangles)
@@ -451,7 +455,7 @@ public:
      *  @param node1 - right node of a subtree
      *  @param node2 - left node of a subtree
      */
-    static void check_BVH_intersection(std::unique_ptr<BVH_node>& node1, std::unique_ptr<BVH_node>& node2, Triangle_intersection& tr_int) {
+    static void check_BVH_intersection(std::unique_ptr<BVH_node>& node1, std::unique_ptr<BVH_node>& node2, Triangle_intersection<coord_t>& tr_int) {
 
     if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right, tr_int);

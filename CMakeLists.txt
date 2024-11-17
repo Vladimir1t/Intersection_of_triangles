@@ -29,7 +29,7 @@ target_link_libraries(test.x test_lib)
 target_compile_options(test.x PRIVATE "$<$<CONFIG:RELEASE>:${CMAKE_CXX_FLAGS_RELEASE}>" ${FLAGS_DEBUG_1} ${FLAGS_DEBUG_2})
 target_compile_options(intersection.x PRIVATE "$<$<CONFIG:RELEASE>:${CMAKE_CXX_FLAGS_RELEASE}>" ${FLAGS_DEBUG_1} ${FLAGS_DEBUG_2})
 
-# -DCMAKE_BUILD_TYPE=Release -S . -B build
+# cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 # cmake --build build
 # ./build/intersection.x
 #
