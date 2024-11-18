@@ -10,11 +10,11 @@
 #include "intersection_of_triangles.hpp"
 
 static bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, const std::string& test_name);
-static void run_tests();
+static int run_tests();
 
 int main() {
 
-    run_tests();
+    return run_tests();
 }
 
 bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, const std::string& test_name) {
@@ -72,7 +72,7 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
         return true;
 }
 
-void run_tests() {
+int run_tests() {
 
     uint64_t       test_counter = 0;
     const uint64_t Test_num     = 18;
@@ -163,8 +163,12 @@ void run_tests() {
                                    56, 59, 61, 62, 67, 71, 74, 77, 86, 87, 93, 96, 98};
     test_counter += run_big_test(res_ref2, "test3.txt");
 
-    if (test_counter == Test_num)
+    if (test_counter == Test_num) {
         std::cout << "All tests passed!" << std::endl;
+        return 0;
+    }
+    else 
+        return -1;
 }
 
 
