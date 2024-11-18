@@ -156,12 +156,12 @@ int run_tests() {
 
     // Test 17:
     std::set<uint64_t> res_ref1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
-    test_counter += run_big_test(res_ref1, "test.txt");
+    test_counter += run_big_test(res_ref1, "tests/test.txt");
 
     // Test 18:
     std::set<uint64_t> res_ref2 = {5, 6, 12, 16, 18, 19, 23, 24, 28, 32, 33, 38, 39, 40, 41, 47, 49, 53, 
                                    56, 59, 61, 62, 67, 71, 74, 77, 86, 87, 93, 96, 98};
-    test_counter += run_big_test(res_ref2, "test3.txt");
+    test_counter += run_big_test(res_ref2, "tests/test3.txt");
 
     if (test_counter == Test_num) {
         std::cout << "All tests passed!" << std::endl;
