@@ -4,7 +4,7 @@ project("Trinagles_intersection")
 set(CMAKE_CXX_STANDARD 17)
 
 set(test_srcs
-    src/tests.cpp
+    tests/src/tests.cpp
 )
 
 set(srcs
