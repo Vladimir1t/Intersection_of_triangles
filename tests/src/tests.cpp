@@ -10,7 +10,7 @@
 #include "intersection_of_triangles.hpp"
 
 static bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, const std::string& test_name);
-static int run_tests();
+static int  run_tests();
 
 int main() {
 
