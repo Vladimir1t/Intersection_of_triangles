@@ -75,7 +75,7 @@ public:
         return (b - a).cross(c - a).normalize();
     }
 
-    bool are_triangles_coplanar(const Triangle& other_tr) const {
+    bool are_triangles_coplanar(const Triangle& other_tr) const noexcept {
 
         const coord_t epsilon_ = 0.00000001;
 
@@ -102,7 +102,8 @@ private:
      *  @param tr  tringle 
      *  @return 1 - intersect | 0 - don't intersect 
      */
-    bool ray_intersects_triangle(const Vect<coord_t>& ray_origin, const Vect<coord_t>& ray_dir, const Triangle<coord_t>& tr) const { // static const
+    bool ray_intersects_triangle(const Vect<coord_t>& ray_origin, const Vect<coord_t>& ray_dir, 
+                                                                  const Triangle<coord_t>& tr) const noexcept { 
 
         Vect<coord_t> vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
         Vect<coord_t> edge1 = vertex2 - vertex1;
@@ -132,7 +133,7 @@ private:
         return (t > epsilon_ && t - epsilon_ < 1);   // intersection_point = ray_origin + ray_dir * t 
     }
 
-    bool point_in_triangle(const Vect<coord_t>& point, const Triangle<coord_t>& triangle) const {
+    bool point_in_triangle(const Vect<coord_t>& point, const Triangle<coord_t>& triangle) const noexcept {
 
         Vect<coord_t> v1 = triangle.b - triangle.a;
         Vect<coord_t> v2 = triangle.c - triangle.a;
@@ -166,7 +167,7 @@ private:
         return (tr.b - tr.a).cross(tr.c - tr.a).normalize();
     }
 
-    bool are_planes_parallel(const Triangle<coord_t>& t1, const Triangle<coord_t>& t2) const {
+    bool are_planes_parallel(const Triangle<coord_t>& t1, const Triangle<coord_t>& t2) const noexcept {
 
         Vect<coord_t> norm1 = normal(t1);
         Vect<coord_t> norm2 = normal(t2);
@@ -210,7 +211,7 @@ public:
      *  @param tr1 first triangle
      *  @param tr2 second triangle 
      */
-    bool intersects_triangle(const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) const {
+    bool intersects_triangle(const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) const noexcept {
         
         if (are_planes_parallel(tr1, tr2)) {
             if (!tr1.are_triangles_coplanar(tr2)) {
@@ -356,15 +357,15 @@ private:
         return box;
     }
 
-    static size_t find_best_split(std::vector<Triangle<coord_t>>& triangles, const Geometry::Optimisation<coord_t>::AABB& box) {
+    static size_t find_best_split(std::vector<Triangle<coord_t>>& triangles, const Geometry::Optimisation<coord_t>::AABB& box) noexcept {
 
         coord_t best_cost  = std::numeric_limits<coord_t>::infinity();
-        size_t best_split = 0;
-        size_t step       = 0;
+        size_t  best_split = 0;
+        size_t  step       = 0;
 
-        const size_t BIG_STEP    = 70;
-        const size_t MIDDLE_STEP = 10;
-        const size_t SMALL_STEP  = 2;
+        constexpr size_t BIG_STEP    = 70;
+        constexpr size_t MIDDLE_STEP = 10;
+        constexpr size_t SMALL_STEP  = 2;
 
         if (triangles.size() > BIG_STEP * 2) 
             step = BIG_STEP;
@@ -376,8 +377,9 @@ private:
             step = 1;
 
         coord_t parent_area = box.surface_area();
-        
-        std::sort(triangles.begin(), triangles.end(), [](const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) {  // sort by x
+
+        /* sort by x */
+        std::sort(triangles.begin(), triangles.end(), [](const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) {  
             coord_t centroid_A = (tr1.a.x + tr1.b.x + tr1.c.x) / 3.0f;
             coord_t centroid_B = (tr2.a.x + tr2.b.x + tr2.c.x) / 3.0f;
             return centroid_A < centroid_B;
@@ -412,7 +414,7 @@ public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param tringles 
      */
-    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle<coord_t>>& triangles) {   
+    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle<coord_t>>& triangles) noexcept {   
 
         if (triangles.size() == 1) {
 
@@ -437,7 +439,7 @@ public:
 
         #ifndef NDEBUG
             for (auto tr: left_triangles)
-                std::cout << "left ind " << tr.index << '\n';
+                std::cout << "left  ind " << tr.index << '\n';
             for (auto tr: right_triangles)
                 std::cout << "right ind " << tr.index << '\n';
         #endif
@@ -455,7 +457,8 @@ public:
      *  @param node1 - right node of a subtree
      *  @param node2 - left node of a subtree
      */
-    static void check_BVH_intersection(std::unique_ptr<BVH_node>& node1, std::unique_ptr<BVH_node>& node2, Triangle_intersection<coord_t>& tr_int) {
+    static void check_BVH_intersection(std::unique_ptr<BVH_node>& node1, std::unique_ptr<BVH_node>& node2,
+                                                                     Triangle_intersection<coord_t>& tr_int) noexcept {
 
     if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right, tr_int);

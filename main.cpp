@@ -17,18 +17,20 @@ int main() {
     Geometry::Triangle_intersection<double> tr_int;
     Geometry::Optimisation<double> opt;
 
-    uint64_t number_tr = 0;
+    int64_t number_tr = 0;
     
-    if (!(std::cin >> number_tr).good())
-        return 0;
-    if (number_tr <= 0)
-        return 0;
+    if (!(std::cin >> number_tr).good() || (number_tr <= 0)) {
+        std::cout << "incorrect input\n";
+        return -1;
+    }
 
     double x1, y1, z1, x2, y2, z2, x3, y3, z3; 
     for (int i = 0; i < number_tr; ++i) {
 
-        if (!(std::cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3).good())
-            break;
+        if (!(std::cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3).good()) {
+            std::cout << "incorrect input\n";
+            return -1;
+        }
         Geometry::Triangle<double> tr({x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3});
         tr_int.add_triangle(tr);
     }
