@@ -75,7 +75,7 @@ public:
         return (b - a).cross(c - a).normalize();
     }
 
-    bool are_triangles_coplanar(const Triangle& other_tr) const noexcept {
+    bool are_triangles_coplanar(const Triangle& other_tr) const  {
 
         const coord_t epsilon_ = 0.00000001;
 
@@ -103,7 +103,7 @@ private:
      *  @return 1 - intersect | 0 - don't intersect 
      */
     bool ray_intersects_triangle(const Vect<coord_t>& ray_origin, const Vect<coord_t>& ray_dir, 
-                                                                  const Triangle<coord_t>& tr) const noexcept { 
+                                                                  const Triangle<coord_t>& tr) const { 
 
         Vect<coord_t> vertex1 = tr.a, vertex2 = tr.b, vertex3 = tr.c;
         Vect<coord_t> edge1 = vertex2 - vertex1;
@@ -133,7 +133,7 @@ private:
         return (t > epsilon_ && t - epsilon_ < 1);   // intersection_point = ray_origin + ray_dir * t 
     }
 
-    bool point_in_triangle(const Vect<coord_t>& point, const Triangle<coord_t>& triangle) const noexcept {
+    bool point_in_triangle(const Vect<coord_t>& point, const Triangle<coord_t>& triangle) const {
 
         Vect<coord_t> v1 = triangle.b - triangle.a;
         Vect<coord_t> v2 = triangle.c - triangle.a;
@@ -167,7 +167,7 @@ private:
         return (tr.b - tr.a).cross(tr.c - tr.a).normalize();
     }
 
-    bool are_planes_parallel(const Triangle<coord_t>& t1, const Triangle<coord_t>& t2) const noexcept {
+    bool are_planes_parallel(const Triangle<coord_t>& t1, const Triangle<coord_t>& t2) const {
 
         Vect<coord_t> norm1 = normal(t1);
         Vect<coord_t> norm2 = normal(t2);
@@ -211,7 +211,7 @@ public:
      *  @param tr1 first triangle
      *  @param tr2 second triangle 
      */
-    bool intersects_triangle(const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) const noexcept {
+    bool intersects_triangle(const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) const {
         
         if (are_planes_parallel(tr1, tr2)) {
             if (!tr1.are_triangles_coplanar(tr2)) {
@@ -357,7 +357,7 @@ private:
         return box;
     }
 
-    static size_t find_best_split(std::vector<Triangle<coord_t>>& triangles, const Geometry::Optimisation<coord_t>::AABB& box) noexcept {
+    static size_t find_best_split(std::vector<Triangle<coord_t>>& triangles, const Geometry::Optimisation<coord_t>::AABB& box) {
 
         coord_t best_cost  = std::numeric_limits<coord_t>::infinity();
         size_t  best_split = 0;
@@ -414,7 +414,7 @@ public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param tringles 
      */
-    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle<coord_t>>& triangles) noexcept {   
+    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle<coord_t>>& triangles) {   
 
         if (triangles.size() == 1) {
 
@@ -458,7 +458,7 @@ public:
      *  @param node2 - left node of a subtree
      */
     static void check_BVH_intersection(std::unique_ptr<BVH_node>& node1, std::unique_ptr<BVH_node>& node2,
-                                                                     Triangle_intersection<coord_t>& tr_int) noexcept {
+                                                                     Triangle_intersection<coord_t>& tr_int) {
 
     if (node1->left && node1->right) {          
         check_BVH_intersection(node1->left, node1->right, tr_int);
