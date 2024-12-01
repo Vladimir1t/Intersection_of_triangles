@@ -38,7 +38,7 @@ int main() {
     #ifndef NDEBUG
         tr_int.intersect_all();
     #endif
-    std::unique_ptr<Geometry::Optimisation<double>::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array);
+    std::unique_ptr<Geometry::Optimisation<double>::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array.begin(), tr_int.triangle_array.end());
 
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right, tr_int);
 

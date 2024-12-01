@@ -87,7 +87,7 @@ public:
     }
 };
 
-/** @brief Trinagle_intersection - class with methods of algorithm detecting intersection
+/** @brief Triangle_intersection - class with methods of algorithm detecting intersection
  */  
 template<class coord_t>
 class Triangle_intersection {
@@ -96,7 +96,7 @@ private:
 
     const coord_t epsilon_ = 0.00000001;
 
-    /** @brief ray_intersects_triangle - detect the intersection of a ray(trinagle side) and another triangle 
+    /** @brief ray_intersects_triangle - detect the intersection of a ray(Triangle side) and another triangle 
      *  @param ray_origin vector 
      *  @param ray_dir vector 
      *  @param tr  tringle 
@@ -182,7 +182,7 @@ public:
     std::set<uint64_t>    set_index;    
 
     /** @brief add triangle - push a new triangle into vector  
-     *  @param tr new trinagle 
+     *  @param tr new Triangle 
      */
     void add_triangle(Triangle<coord_t>& tr) {
     
@@ -346,18 +346,20 @@ private:
 
     /** @brief create_bounding_box - create AABB for the triangles 
      */
-    static AABB create_bounding_box(const std::vector<Triangle<coord_t>>& triangles) {
+    static AABB create_bounding_box(typename std::vector<Triangle<coord_t>>::iterator it_begin, 
+                                    typename std::vector<Triangle<coord_t>>::iterator it_end) {
         
         AABB box = {};
-        for (auto& tr: triangles) {
-            box.expand(tr.a);
-            box.expand(tr.b);
-            box.expand(tr.c);
+        for (auto tr_it = it_begin; tr_it < it_end; ++tr_it) {
+            box.expand(tr_it->a);
+            box.expand(tr_it->b);
+            box.expand(tr_it->c);
         }
         return box;
     }
 
-    static size_t find_best_split(std::vector<Triangle<coord_t>>& triangles, const Geometry::Optimisation<coord_t>::AABB& box) {
+    static size_t find_best_split(typename std::vector<Triangle<coord_t>>::iterator it_begin, 
+                                  typename std::vector<Triangle<coord_t>>::iterator it_end, const Geometry::Optimisation<coord_t>::AABB& box) {
 
         coord_t best_cost  = std::numeric_limits<coord_t>::infinity();
         size_t  best_split = 0;
@@ -367,11 +369,11 @@ private:
         constexpr size_t MIDDLE_STEP = 10;
         constexpr size_t SMALL_STEP  = 2;
 
-        if (triangles.size() > BIG_STEP * 2) 
+        if ((it_end - it_begin) > BIG_STEP * 2) 
             step = BIG_STEP;
-        else if (triangles.size() > MIDDLE_STEP * 2) 
+        else if ((it_end - it_begin) > MIDDLE_STEP * 2) 
             step = MIDDLE_STEP;
-        else if (triangles.size() > SMALL_STEP * 2) 
+        else if ((it_end - it_begin) > SMALL_STEP * 2) 
             step = SMALL_STEP;
         else 
             step = 1;
@@ -379,28 +381,26 @@ private:
         coord_t parent_area = box.surface_area();
 
         /* sort by x */
-        std::sort(triangles.begin(), triangles.end(), [](const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) {  
+        std::sort(it_begin, it_end, [](const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) {  
             coord_t centroid_A = (tr1.a.x + tr1.b.x + tr1.c.x) / 3.0f;
             coord_t centroid_B = (tr2.a.x + tr2.b.x + tr2.c.x) / 3.0f;
             return centroid_A < centroid_B;
         });
 
-        for (size_t i = step; i < triangles.size(); i += step) { 
-            std::vector<Triangle<coord_t>> left_triangles(triangles.begin(), triangles.begin() + i);
-            std::vector<Triangle<coord_t>> right_triangles(triangles.begin() + i, triangles.end());
-
-            AABB left_box  = create_bounding_box(left_triangles);
-            AABB right_box = create_bounding_box(right_triangles);
+        for (size_t i = step; i < (it_end - it_begin); i += step) { 
+            
+            AABB left_box  = create_bounding_box(it_begin, it_begin + i);
+            AABB right_box = create_bounding_box(it_begin + i, it_end);
 
             coord_t left_area  = left_box.surface_area();
             coord_t right_area = right_box.surface_area();
 
-            coord_t sah_cost = 2.0f + (left_area / parent_area) * left_triangles.size() + 
-                                     (right_area / parent_area) * right_triangles.size() +
-                                     0.1f * (std::max(left_triangles.size(), right_triangles.size()) - 
-                                             std::min(left_triangles.size(), right_triangles.size()));
+            coord_t sah_cost = 2.0f + (left_area / parent_area) * i + 
+                                     (right_area / parent_area) * (it_end - it_begin - i) +
+                                     0.1f * (std::max(i, (it_end - it_begin - i)) - 
+                                             std::min(i, (it_end - it_begin - i)));
 
-            if (sah_cost < best_cost && !left_triangles.empty() && !right_triangles.empty()) {
+            if (sah_cost < best_cost && !(i == 0) && !(it_end - it_begin - i == 0)) {
                 best_cost = sah_cost;
                 best_split = i;
             }
@@ -412,43 +412,42 @@ private:
 public:
 
     /** @brief build_BVH - recursively build BVH tree
-     *  @param tringles 
+     *  @param 2 iterators of tringles vector 
      */
-    typename std::unique_ptr<BVH_node> build_BVH(std::vector<Triangle<coord_t>>& triangles) {   
+    typename std::unique_ptr<BVH_node> build_BVH(typename std::vector<Triangle<coord_t>>::iterator it_begin, 
+                                                 typename std::vector<Triangle<coord_t>>::iterator it_end) {
 
-        if (triangles.size() == 1) {
+        if ((it_end - it_begin) == 1) {
 
-            auto leaf_node = std::make_unique<BVH_node>(create_bounding_box(triangles));
-            leaf_node->triangles = triangles;
+            auto leaf_node = std::make_unique<BVH_node>(create_bounding_box(it_begin, it_end));
+            leaf_node->triangles = std::vector<Triangle<coord_t>>(it_begin, it_end);
             
             return leaf_node;
         }
-        AABB box = create_bounding_box(triangles);
+        AABB box = create_bounding_box(it_begin, it_end);
 
-        size_t best_split = find_best_split(triangles, box);
+        size_t best_split = find_best_split(it_begin, it_end, box);
 
-        if (best_split == 0 || best_split == triangles.size()) {
+        if (best_split == 0 || best_split == (it_end - it_begin)) {
             auto leaf_node = std::make_unique<BVH_node>(box);
-            leaf_node->triangles = triangles;
+            leaf_node->triangles = std::vector<Triangle<coord_t>>(it_begin, it_end);
             
             return leaf_node;
         }
         
-        std::vector<Triangle<coord_t>> left_triangles (triangles.begin(), triangles.begin() + best_split);
-        std::vector<Triangle<coord_t>> right_triangles(triangles.begin() + best_split, triangles.end());
-
         #ifndef NDEBUG
-            for (auto tr: left_triangles)
-                std::cout << "left  ind " << tr.index << '\n';
-            for (auto tr: right_triangles)
-                std::cout << "right ind " << tr.index << '\n';
+            for (auto tr_it = it_begin; tr_it < it_begin + best_split; ++tr_it)
+                std::cout << "left  ind " << tr_it->index << '\n';
+            for (auto tr_it = it_begin + best_split; tr_it < it_end; ++tr_it)
+                std::cout << "right ind " << tr_it->index << '\n';
         #endif
 
         auto node = std::make_unique<BVH_node>(box);
-        node->triangles = triangles;
+        node->triangles = std::vector<Triangle<coord_t>>(it_begin, it_end);
         
-        node->left  = build_BVH(left_triangles);
-        node->right = build_BVH(right_triangles);
+        node->left  = build_BVH(it_begin, it_begin + best_split);
+
+        node->right = build_BVH(it_begin + best_split, it_end);
        
         return node;
     
