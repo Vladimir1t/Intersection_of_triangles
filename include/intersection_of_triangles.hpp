@@ -10,7 +10,7 @@
 namespace Geometry {
 
 template<class coord_t>
-class Vect {     
+class Vect final {     
 
 public:
 
@@ -163,14 +163,10 @@ private:
         return (u >= -epsilon_) && (v >= -epsilon_) && (u + v <= 1 + epsilon_);
     }
 
-    static Vect<coord_t> normal(const Triangle<coord_t>& tr) {
-        return (tr.b - tr.a).cross(tr.c - tr.a).normalize();
-    }
+    bool are_planes_parallel(const Triangle<coord_t>& tr1, const Triangle<coord_t>& tr2) const {
 
-    bool are_planes_parallel(const Triangle<coord_t>& t1, const Triangle<coord_t>& t2) const {
-
-        Vect<coord_t> norm1 = normal(t1);
-        Vect<coord_t> norm2 = normal(t2);
+        Vect<coord_t> norm1 = tr1.normal();
+        Vect<coord_t> norm2 = tr2.normal();
         coord_t dot_product = norm1.count_dot(norm2);
 
         return (dot_product > 1 - epsilon_ || dot_product < -(1 - epsilon_)); 
@@ -184,7 +180,7 @@ public:
     /** @brief add triangle - push a new triangle into vector  
      *  @param tr new Triangle 
      */
-    void add_triangle(Triangle<coord_t>& tr) {
+    void add_triangle(const Triangle<coord_t>& tr) {
     
         triangle_array.push_back(tr);
         triangle_array.back().index = triangle_array.size() - 1;
@@ -253,8 +249,8 @@ public:
 
 /** @brief Optimisation - a class with methods of building BVH tree with AABB
  */
-template<class coord_t>
-class Optimisation {
+template<class coord_t, typename iterator_t>
+class Optimisation final {
 
 private:
     /** @brief AABB (axis-aligned bounding box)
@@ -268,8 +264,10 @@ private:
     public:
 
         AABB() {
-            min_point = Vect<coord_t>( std::numeric_limits<coord_t>::infinity(),  std::numeric_limits<coord_t>::infinity(),  std::numeric_limits<coord_t>::infinity());
-            max_point = Vect<coord_t>(-std::numeric_limits<coord_t>::infinity(), -std::numeric_limits<coord_t>::infinity(), -std::numeric_limits<coord_t>::infinity());
+            min_point = Vect<coord_t>( std::numeric_limits<coord_t>::infinity(),  std::numeric_limits<coord_t>::infinity(), 
+                                                                                  std::numeric_limits<coord_t>::infinity());
+            max_point = Vect<coord_t>(-std::numeric_limits<coord_t>::infinity(), -std::numeric_limits<coord_t>::infinity(), 
+                                                                                 -std::numeric_limits<coord_t>::infinity());
         }
 
         AABB(const Vect<coord_t>& min_point, const Vect<coord_t>& max_point) : min_point(min_point), max_point(max_point) {}
@@ -346,8 +344,8 @@ private:
 
     /** @brief create_bounding_box - create AABB for the triangles 
      */
-    static AABB create_bounding_box(typename std::vector<Triangle<coord_t>>::iterator it_begin, 
-                                    typename std::vector<Triangle<coord_t>>::iterator it_end) {
+    static AABB create_bounding_box(iterator_t it_begin, 
+                                    iterator_t it_end) {
         
         AABB box = {};
         for (auto tr_it = it_begin; tr_it < it_end; ++tr_it) {
@@ -358,8 +356,8 @@ private:
         return box;
     }
 
-    static size_t find_best_split(typename std::vector<Triangle<coord_t>>::iterator it_begin, 
-                                  typename std::vector<Triangle<coord_t>>::iterator it_end, const Geometry::Optimisation<coord_t>::AABB& box) {
+    static size_t find_best_split(iterator_t it_begin, 
+                                  iterator_t it_end, const Geometry::Optimisation<coord_t, iterator_t>::AABB& box) {
 
         coord_t best_cost  = std::numeric_limits<coord_t>::infinity();
         size_t  best_split = 0;
@@ -414,8 +412,8 @@ public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param 2 iterators of tringles vector 
      */
-    typename std::unique_ptr<BVH_node> build_BVH(typename std::vector<Triangle<coord_t>>::iterator it_begin, 
-                                                 typename std::vector<Triangle<coord_t>>::iterator it_end) {
+    std::unique_ptr<BVH_node> build_BVH(iterator_t it_begin, 
+                                        iterator_t it_end) {
 
         if ((it_end - it_begin) == 1) {
 

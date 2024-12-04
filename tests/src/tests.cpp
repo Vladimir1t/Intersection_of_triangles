@@ -9,7 +9,8 @@
 
 #include "intersection_of_triangles.hpp"
 
-static bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, const std::string& test_name);
+static bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, 
+                                                                                        const std::string& test_name);
 static int  run_tests();
 
 int main() {
@@ -17,7 +18,8 @@ int main() {
     return run_tests();
 }
 
-bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, const std::string& test_name) {
+bool run_test(const Geometry::Triangle<double>& t1, const Geometry::Triangle<double>& t2, bool expected_result, 
+                                                                                    const std::string& test_name) {
 
     Geometry::Triangle_intersection<double> tr_int;
     bool result = tr_int.intersects_triangle(t1, t2);
@@ -37,7 +39,7 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
 
     Geometry::Triangle_intersection<double> tr_int;
 
-    Geometry::Optimisation<double> opt;
+    Geometry::Optimisation<double, typename std::vector<Geometry::Triangle<double>>::iterator> opt;
 
     std::ifstream in_file;
     in_file.open(file_name);
@@ -58,7 +60,9 @@ bool run_big_test(const std::set<uint64_t> res_ref, const std::string& file_name
     }
     in_file.close();
 
-    std::unique_ptr<Geometry::Optimisation<double>::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array.begin(), tr_int.triangle_array.end());
+    std::unique_ptr<Geometry::Optimisation<double, typename std::vector<Geometry::Triangle<double>>::iterator>::BVH_node> bvh_root = 
+                                                            opt.build_BVH(tr_int.triangle_array.begin(), tr_int.triangle_array.end());
+
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right, tr_int);
 
     bool res = (tr_int.set_index == res_ref);
