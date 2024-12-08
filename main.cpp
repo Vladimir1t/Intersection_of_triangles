@@ -1,9 +1,9 @@
+#include "intersection_of_triangles.hpp"
+
 #include <iostream>
 #include <cstdint>
 #include <memory>
 #include <set>
-
-#include "intersection_of_triangles.hpp"
 
 /** @name Intersection of triangles
  *  @brief main of a program 'intersection of trinagles'
@@ -15,7 +15,7 @@
 int main() {
 
     Geometry::Triangle_intersection<double> tr_int;
-    Geometry::Optimisation<double, typename std::vector<Geometry::Triangle<double>>::iterator> opt;
+    Geometry::Optimisation<double> opt;
 
     int64_t number_tr = 0;
     
@@ -38,7 +38,8 @@ int main() {
     #ifndef NDEBUG
         tr_int.intersect_all();
     #endif
-    std::unique_ptr<Geometry::Optimisation<double, typename std::vector<Geometry::Triangle<double>>::iterator>::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array.begin(), tr_int.triangle_array.end());
+    std::unique_ptr<Geometry::Optimisation<double>::BVH_node> bvh_root = opt.build_BVH(tr_int.triangle_array.begin(), 
+                                                                                       tr_int.triangle_array.end());
 
     opt.check_BVH_intersection(bvh_root->left, bvh_root->right, tr_int);
 

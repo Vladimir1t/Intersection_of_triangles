@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <cstdint>
 #include <set>
@@ -60,7 +61,7 @@ public:
 };
 
 template<class coord_t>
-class Triangle { 
+class Triangle final { 
 
 public:
     Vect<coord_t> a;
@@ -90,7 +91,7 @@ public:
 /** @brief Triangle_intersection - class with methods of algorithm detecting intersection
  */  
 template<class coord_t>
-class Triangle_intersection {
+class Triangle_intersection final {
 
 private:
 
@@ -249,13 +250,13 @@ public:
 
 /** @brief Optimisation - a class with methods of building BVH tree with AABB
  */
-template<class coord_t, typename iterator_t>
+template<class coord_t>
 class Optimisation final {
 
 private:
     /** @brief AABB (axis-aligned bounding box)
     */
-    class AABB {
+    class AABB final {
 
     private:
 
@@ -329,7 +330,7 @@ public:
 
     /** @brief node of bounding volume hierarchy (BVH)
      */
-    struct BVH_node {
+    struct BVH_node final {
         AABB bounding_box;
 
         std::unique_ptr<BVH_node> left  = nullptr;
@@ -344,6 +345,7 @@ private:
 
     /** @brief create_bounding_box - create AABB for the triangles 
      */
+    template<typename iterator_t>
     static AABB create_bounding_box(iterator_t it_begin, 
                                     iterator_t it_end) {
         
@@ -355,9 +357,9 @@ private:
         }
         return box;
     }
-
+    template<typename iterator_t>
     static size_t find_best_split(iterator_t it_begin, 
-                                  iterator_t it_end, const Geometry::Optimisation<coord_t, iterator_t>::AABB& box) {
+                                  iterator_t it_end, const Geometry::Optimisation<coord_t>::AABB& box) {
 
         coord_t best_cost  = std::numeric_limits<coord_t>::infinity();
         size_t  best_split = 0;
@@ -412,6 +414,7 @@ public:
     /** @brief build_BVH - recursively build BVH tree
      *  @param 2 iterators of tringles vector 
      */
+    template<typename iterator_t>
     std::unique_ptr<BVH_node> build_BVH(iterator_t it_begin, 
                                         iterator_t it_end) {
 
